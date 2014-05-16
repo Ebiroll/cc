@@ -1,0 +1,26 @@
+{
+    "name": "Chicken chase",
+    "description": "Chicken hunting map based game",
+    "version": "0.0.1",
+    "main": "./master.js",
+    "dependencies": {
+        "mongodb" : "*",
+        "express": "*",
+        "body-parser" : "*"
+    },
+    "author": {
+        "name": "Olof Astrand",
+        "email": "olof.astrand@gmail.com"
+    },
+    "keywords": [],
+    "licenses": {
+        "type": "none"
+    }, 
+    "repository": {
+        "type": "git",
+        "url": "ssh://git@li140-230.members.linode.com/var/extra/cc.git"
+    },
+    "bugs": {
+        "url": "http://github.com/YOUR_LOGIN/Hello World/issues"
+    }
+}

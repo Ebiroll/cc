@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="../js/jquery.min.js"></script>
+</head>
+
+<body>
+<div id="mapdiv" style="width: 100%;  height: 600px;"></div>
+<script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+<script>
+
+
+
+// When document is loaded
+$(function () {
+    loadData();
+    console.log("loaded");
+});
+
+var markers;
+
+function project(lat,lon)
+{
+
+   var lonlat = new OpenLayers.LonLat(lon, lat).transform(
+          new OpenLayers.Projection("EPSG:4326"), // transform from WGS 1984
+          map.getProjectionObject() // to Spherical Mercator Projection
+        );
+
+  return lonlat;
+
+}
+
+//   59.4232389
+//   17.8295509
+
+var myPositions = [{ name : "TEST" ,  lon : 59.4232389,  lat :  17.8295509 },
+          { name : "KYCKLING" ,  lon : 59.4232389,  lat :  17.8295509 }];
+
+
+ /**
+         * Function: addMarker
+         * Add a new marker to the markers layer given the following lonlat, 
+         *     popupClass, and popup contents HTML. Also allow specifying 
+         *     whether or not to give the popup a close box.
+         * 
+         * Parameters:
+         * ll - {<OpenLayers.LonLat>} Where to place the marker
+         * popupClass - {<OpenLayers.Class>} Which class of popup to bring up 
+         *     when the marker is clicked.
+         * popupContentHTML - {String} What to put in the popup
+         * closeBox - {Boolean} Should popup have a close box?
+         * overflow - {Boolean} Let the popup overflow scrollbars?
+         */
+        function addMarker(ll, popupClass, popupContentHTML, closeBox, overflow) {
+
+            var feature = new OpenLayers.Feature(markers, ll); 
+            feature.closeBox = closeBox;
+            feature.popupClass = popupClass;
+            feature.data.popupContentHTML = popupContentHTML;
+            feature.data.overflow = (overflow) ? "auto" : "hidden";
+                    
+            var marker = feature.createMarker();
+
+            var markerClick = function (evt) {
+                if (this.popup == null) {
+                    this.popup = this.createPopup(this.closeBox);
+                    map.addPopup(this.popup);
+                    this.popup.show();
+                } else {
+                    this.popup.toggle();
+                }
+                currentPopup = this.popup;
+                OpenLayers.Event.stop(evt);
+            };
+            marker.events.register("mousedown", feature, markerClick);
+
+            markers.addMarker(marker);
+        }
+
+        AutoSizeFramedCloud = OpenLayers.Class(OpenLayers.Popup.FramedCloud, {
+            'autoSize': true
+        });
+
+
+    loadData = function() {
+       var postData={
+           dummy : "maybelater"
+       };
+        
+        var httpRequest = $.ajax({
+            method: 'POST',
+            url: 'mapdata.json',
+            data: postData,
+            dataType: "json"
+        }).success(function(newdata) {
+            myPositions = newdata;
+            for (var j=0;j<myPositions.length;j++)
+            {
+              console.log("Y");   
+              var tmp=project(myPositions[j].lon,myPositions[j].lat);
+              //markers.addMarker(new OpenLayers.Marker(tmp));
+              
+              popupClass = AutoSizeFramedCloud;
+              popupContentHTML = '<div style="background-color:white;"><br>'  + myPositions[j].lname +   "<br>" + myPositions[j].name + '</div>';
+
+              addMarker(tmp, popupClass, popupContentHTML, true);
+
+              // Later check this out
+              // http://openlayers.org/dev/examples/popupMatrix.html
+              
+              // var popup = new OpenLayers.Popup(null,
+              //   new OpenLayers.LonLat(myPositions[j].lat,myPositions[j].lon),
+              //   new OpenLayers.Size(40,20),
+              //   myPositions[j].name,
+              //   true);
+
+              //map.addPopup(popup);
+              
+              
+              console.log("add marker");
+            }
+        });
+    };
+
+
+  map = new OpenLayers.Map("mapdiv");
+  map.addLayer(new OpenLayers.Layer.OSM());
+
+//   59.4232389
+//   17.8295509  
+
+  var lonLat = new OpenLayers.LonLat( 17.8295509 , 59.4232389) 
+        .transform(
+          new OpenLayers.Projection("EPSG:4326"), // transform from WGS 1984
+          map.getProjectionObject() // to Spherical Mercator Projection
+        );
+
+  var zoom=17;
+
+  markers = new OpenLayers.Layer.Markers( "Markers" );
+  map.addLayer(markers);
+
+  markers.addMarker(new OpenLayers.Marker(lonLat));
+  for (var j=0;j<myPositions.length;j++)
+  {
+    var tmp=project(myPositions[j].lat,myPositions[j].lon);
+    markers.addMarker(new OpenLayers.Marker(tmp));
+    console.log("add marker");
+  }
+
+  map.setCenter (lonLat, zoom);
+
+
+
+  
+
+
+ 
+
+function setMyCenter(lat,lon,name) {
+    console.log("Set center " , lat , lon);
+    var klonlat = new OpenLayers.LonLat(lat,lon).transform(
+          new OpenLayers.Projection("EPSG:4326"), // transform from WGS 1984
+          map.getProjectionObject() // to Spherical Mercator Projection
+        );
+
+    console.log(klonlat);
+    //var markers = new OpenLayers.Layer.Markers(name);
+    //map.addLayer(markers);
+
+    markers.addMarker(new OpenLayers.Marker(klonlat));
+
+    //var zoom=16;
+
+    map.panTo(klonlat);
+    //map.setCenter (lonLat, zoom);
+}
+    
+    
+  
+  console.log("Script complete");
+</script>
+
+
+</body>
+</html>
