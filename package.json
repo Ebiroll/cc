@@ -1,5 +1,5 @@
 {
-    "name": "Chicken chase",
+    "name": "Chicken_chase",
     "description": "Chicken hunting map based game",
     "version": "0.0.1",
     "main": "./master.js",
