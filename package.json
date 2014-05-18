@@ -5,8 +5,11 @@
     "main": "./master.js",
     "dependencies": {
         "mongodb" : "*",
-        "express": "*",
-        "body-parser" : "*"
+        "express": "4.x",
+        "morgan": "*",
+        "body-parser" : "*",
+        "body-parser" : "*",
+        "basic-auth"  : "*"        
     },
     "author": {
         "name": "Olof Astrand",

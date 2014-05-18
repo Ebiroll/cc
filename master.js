@@ -9,28 +9,54 @@
 
 var express = require('express');
 var bodyParser = require('body-parser');
+var auth = require("basic-auth");
 
 var app = require('express')()
   , server = require('http').createServer(app)
   , io = require('socket.io').listen(server);
 
-var port = 10080;
+var port = 10180;
 
-//var logger = require('logger');
-
-// 
+var morgan = require('morgan');
 var users = require('./users/server.js');
 
 
 var userList = [ "admin" , "Ellinor" , "Olle" , "Alex" , "Ludvig" , "Anna" , "Guest" ];
 
 app.use(bodyParser());
-//app.use(express.logger("dev"));
-app.use(express.static(__dirname + '/public'));
+app.use(morgan("dev"));
 
-app.get('/', function(req,res) {
+// Authenticator
+// http://blog.modulus.io/nodejs-and-express-basic-authentication
+
+
+var passport = require('passport');
+var BasicStrategy = require('passport-http').BasicStrategy;
+
+//var lastUser=Olle;
+        
+passport.use(new BasicStrategy(
+  function(username, password, done) {
+      //console.log("AUTH!!!");
+      // username.valueOf() === 'olle' &&
+      
+    if (password.valueOf() === 'pip')
+      return done(null, true);
+    else
+      return done(null, false);
+  }
+));
+
+app.use(passport.initialize());
+app.use(passport.session());
+app.use('/',passport.authenticate('basic', { session: false }));
+app.use('/',express.static(__dirname + '/public'));
+
+
+function testMe(req,res) {
   res.sendfile('public/index.html');
-});
+};
+
 
 //app.get('/users/users.html', function(req,res) {
 //  res.sendfile('users/users.html');
@@ -38,25 +64,33 @@ app.get('/', function(req,res) {
 //app.use(express.static(__dirname + '/users/users.html'));
 
 
-//var myAuthCallback=function(error,result)
-//{
-//   console.log("MyAuthCallback");
-//   return(result);
-//}
+var fs  = require('fs')
 
-// Authenticator
-// http://blog.modulus.io/nodejs-and-express-basic-authentication
-//app.use(express.basicAuth(function(user, pass) {
-//    var ok=true;
-//    
-//   var result = (user === 'admin' && pass === 'tupp');
-//   // Only admin allowed before we provide callback funcrion
-//    // user === 'test'
-//    //pass === 'test';
-//   console.log("Authenticate");
-//   myAuthCallback(null /* error */, result);
-//   return(result)
-// }));
+
+
+
+app.get('/js/application2.js',passport.authenticate('basic', { session: false }),function(req,res) {
+  var user = auth(req);
+  var response; //  = 'public/js/application.js';
+  fs.readFile('public/js/application.js','utf-8', function(e,d) {
+      if (e) {
+        console.log(e);
+        res.send(500, 'Something went wrong');
+      }
+      else {
+        console.log("serving custom file",user.name,user.pass);
+        //fs.writeFile('counter.txt',parseInt(d) + 1);
+        response = "var username= \"" + user.name + "\";";
+        response += d;
+        res.send(response);
+      }
+  })  
+  //res.sendfile('public/js/application.js');
+});
+
+
+app.get('/' , passport.authenticate('basic', { session: false }),testMe);
+
 
 
 app.get("/about", function(request, response) {
@@ -71,8 +105,11 @@ io.set('log level', 1);
 
 io.sockets.on('connection', function (socket) {
 	socket.on('send:coords', function (data) {
-		socket.broadcast.emit('load:coords', data);
-	});
+                //console.log(data);
+                users.savePosition(data);
+                
+                users.servePosition(socket);
+  	});
 });
 
 // Not necessary??

@@ -1,8 +1,12 @@
+//<script type="text/javascript">var username=(insert JSON-encoded string here);</script>
+var map;
 $(function() {
 	// generate unique user id
-	var userId = Math.random().toString(16).substring(2,15);
-	var socket = io.connect('/');
-
+	//var userId = Math.random().toString(16).substring(2,15);
+	var userId =username;
+                
+        //console-log("User",)
+        
 	var info = $('#infobox');
 	var doc = $(document);
 
@@ -27,6 +31,7 @@ $(function() {
 	var active = false;
 
 	socket.on('load:coords', function(data) {
+                console.log("got",data);
 		if (!(data.id in connects)) {
 			setMarker(data);
 		}
@@ -55,7 +60,7 @@ $(function() {
 		// userMarker = L.marker([51.45, 30.050], { icon: redIcon });
 
 		// load leaflet map
-                var map = L.map('map').setView([59.4232389, 17.8295509], 13);
+                map = L.map('map').setView([59.4232389, 17.8295509], 13);
 
 		L.tileLayer('https://{s}.tiles.mapbox.com/v3/olof-astrand.i90p08cm/{z}/{x}/{y}.png', {
 			maxZoom: 18,
@@ -67,7 +72,7 @@ $(function() {
 
 
 		L.marker([59.4232389, 17.8295509]).addTo(map)
-			.bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();
+			.bindPopup("<b>Hello world!</b><br />I am an egg").openPopup();
 
 		L.circle([59.4232389, 17.8295509], 50, {
 			color: 'orange',
@@ -77,7 +82,7 @@ $(function() {
 
                 
 		userMarker.addTo(map);
-		userMarker.bindPopup('<p>You are there! Your ID is ' + userId + '</p>').openPopup();
+		userMarker.bindPopup('<p>You are there! Your are ' + userId + '</p>').openPopup();
                 
                 var popup = L.popup();
 
@@ -120,7 +125,7 @@ $(function() {
 	function setMarker(data) {
 		for (var i = 0; i < data.coords.length; i++) {
 			var marker = L.marker([data.coords[i].lat, data.coords[i].lng], { icon: yellowIcon }).addTo(map);
-			marker.bindPopup('<p>One more external user is here!</p>');
+			marker.bindPopup('<p>' + data.id + ' is here!</p>');
 			markers[data.id] = marker;
 		}
 	}
@@ -146,10 +151,10 @@ $(function() {
 	// delete inactive users every 15 sec
 	setInterval(function() {
 		for (var ident in connects){
-			if ($.now() - connects[ident].updated > 15000) {
+			if ($.now() - connects[ident].updated > 150000) {
 				delete connects[ident];
 				map.removeLayer(markers[ident]);
 			}
 		}
-	}, 15000);
+	}, 150000);
 });

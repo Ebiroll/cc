@@ -11,6 +11,68 @@ var dbs = "mongodb://localhost:27017/cc";
 var mc = require('mongodb').MongoClient;
 
 
+exports.servePosition=function servePosition( socket )
+{
+       var array = new Array();
+        console.log("find");
+        mc.connect(dbs, function(err, db) {
+        if (err)
+            return(array);
+            //throw(err);
+        var collection = db.collection("positions", function(err, collection) {
+            console.log("serving positions");
+
+           
+            var cursor = collection.find().sort({ _id : 1},function(err, cursor) {
+                var j = 0;
+                cursor.each(function(err, item) {
+                    if (item) {
+                        //console.log(item);
+                        if (item.data)
+                        {
+                            console.log("serve",item.data);
+                            //item.data.selected=false;
+                            array.push(item.data);
+                            socket.emit('load:coords', item.data);
+                        }
+                    }
+                    else
+                    {
+                        
+                        console.log("my array",array);
+                        return(array);
+                    }
+                });
+            });
+        });
+    });
+    console.log("Async???");
+    return(array);
+}
+
+exports.savePosition=function(thePos)
+{
+    console.log("SAVE Positions");
+    mc.connect(dbs, function(err, db) {
+      if (err)
+          throw(err);
+          var collection = db.collection("positions", function(err, collection) {
+
+          var doc = {
+              _id: thePos.id,
+              recid: 0,
+              data: thePos
+          };
+
+          collection.save(doc, {w: 1}, function(err, docs) {
+              if (err) {
+                  console.log("failed save",thePos);
+              }
+          });
+      });
+  });
+}
+
 
 exports.usersPost = function(request, response)
 {
