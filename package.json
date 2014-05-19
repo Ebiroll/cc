@@ -8,8 +8,9 @@
         "express": "4.x",
         "morgan": "*",
         "body-parser" : "*",
-        "body-parser" : "*",
-        "basic-auth"  : "*"        
+        "basic-auth"  : "*", 
+        "passport"  : "*" ,
+        "passport-http"  : "*"        
     },
     "author": {
         "name": "Olof Astrand",
