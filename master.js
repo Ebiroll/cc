@@ -19,6 +19,7 @@ var port = 10180;
 
 var morgan = require('morgan');
 var users = require('./users/server.js');
+var chickens = require('./chickens/server.js');
 
 
 var userList = [ "admin" , "Ellinor" , "Olle" , "Alex" , "Ludvig" , "Anna" , "Guest" ];
@@ -103,12 +104,16 @@ app.get("/about", function(request, response) {
 // delete to see more logs from sockets
 io.set('log level', 1);
 
-io.sockets.on('connection', function (socket) {
-	socket.on('send:coords', function (data) {
+io.sockets.on('connection', function (client) {
+    
+        console.log("connected");
+        chickens.serveChickens(client);
+    
+	client.on('send:coords', function (data) {
                 //console.log(data);
                 users.savePosition(data);
                 
-                users.servePosition(socket);
+                users.servePosition(client);
   	});
 });
 
@@ -118,6 +123,9 @@ app.set('json spaces', 0);
 
 //app.get("/users/users.json", users.getUsers);
 app.post("/users/records.json", users.usersPost);
+
+app.post("/chickens/records.json", chickens.chickensPost);
+
 
 //app.listen(port);
 server.listen(port);

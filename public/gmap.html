@@ -93,12 +93,38 @@
               markers[data.id] = marker;
             }
     }
-             
+
+    
+            
+    function setChicken(data) {
+           var image = 'assets/egg-icon.png';
+
+              var myLatlng = new google.maps.LatLng(data.lat, data.lng);
+              var marker = new google.maps.Marker({
+                  position: myLatlng,
+                  map: map,
+                  title:data.lname,
+                  icon: image
+              });
+              markers[data.id] = marker;
+            }
+    
+
+    
+    
         
-        
+        socket.on('load:chickens', function(data) {
+                console.log("got chickendata",data);
+		if (!(data.id in connects)) {
+			setChicken(data);
+		}
+
+		connects[data.id] = data;
+		connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
+	});
         
       	socket.on('load:coords', function(data) {
-                console.log("got",data);
+                //console.log("got",data);
 		if (!(data.id in connects)) {
 			setMarker(data);
 		}

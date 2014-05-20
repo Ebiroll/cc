@@ -11,16 +11,17 @@ var dbs = "mongodb://localhost:27017/cc";
 var mc = require('mongodb').MongoClient;
 
 
-exports.servePosition=function servePosition( socket )
+// Returns all chickens positions
+exports.serveChickens=function serveChickens( socket )
 {
-        var array = new Array();
-        
+       var array = new Array();
+        console.log("give me chickens");
         mc.connect(dbs, function(err, db) {
         if (err)
             return(array);
             //throw(err);
-        var collection = db.collection("positions", function(err, collection) {
-            console.log("serving positions");
+        var collection = db.collection("chickens", function(err, collection) {
+            console.log("serving chickens");
 
            
             var cursor = collection.find().sort({ _id : 1},function(err, cursor) {
@@ -30,15 +31,14 @@ exports.servePosition=function servePosition( socket )
                         //console.log(item);
                         if (item.data)
                         {
-                            //console.log("serve",item.data);
+                            console.log("serve",item.data);
                             //item.data.selected=false;
                             array.push(item.data);
-                            socket.emit('load:coords', item.data);
+                            socket.emit('load:chickens', item.data);
                         }
                     }
                     else
-                    {
-                        
+                    {                        
                         console.log("my array",array);
                         return(array);
                     }
@@ -46,38 +46,15 @@ exports.servePosition=function servePosition( socket )
             });
         });
     });
-    console.log("Async???");
     return(array);
 }
 
-exports.savePosition=function(thePos)
-{
-    console.log("SAVE Positions");
-    mc.connect(dbs, function(err, db) {
-      if (err)
-          throw(err);
-          var collection = db.collection("positions", function(err, collection) {
-
-          var doc = {
-              _id: thePos.id,
-              recid: 0,
-              data: thePos
-          };
-
-          collection.save(doc, {w: 1}, function(err, docs) {
-              if (err) {
-                  console.log("failed save",thePos);
-              }
-          });
-      });
-  });
-}
 
 
-exports.usersPost = function(request, response)
+exports.chickensPost = function(request, response)
 {
     //console.log("post",req.);
-    console.log("body", request.body);
+    console.log("post chickens body", request.body);
     console.log("serverGet", request.body.cmd);
     response.type('json');
 
@@ -97,7 +74,7 @@ exports.usersPost = function(request, response)
                 mc.connect(dbs, function(err, db) {
                     if (err)
                         throw(err);
-                    var collection = db.collection("users", function(err, collection) {
+                    var collection = db.collection("chickens", function(err, collection) {
                         console.log("find!!");
 
                         var array = new Array();
@@ -106,7 +83,7 @@ exports.usersPost = function(request, response)
                             cursor.each(function(err, item) {
                                 if (item) {
                                     //console.log(item);
-                                    if (item.data.record)
+                                    if (item.data)
                                     {
                                         //console.log(item.data.record);
                                         item.data.selected=false;
@@ -160,7 +137,7 @@ exports.usersPost = function(request, response)
                 mc.connect(dbs, function(err, db) {
                     if (err)
                         throw(err);
-                    var collection = db.collection("users", function(err, collection) {
+                    var collection = db.collection("chickens", function(err, collection) {
 
                         var doc = {_id: Number(request.body.record["_id"]),
                             recid: request.body.record["recid"],
@@ -168,7 +145,7 @@ exports.usersPost = function(request, response)
                             data: request.body.record
                         };
 
-                        collection.save(doc, {w: 1}, function(err, docs) {
+                        collection.save(doc, { w: 1} , function(err, docs) {
                             if (err) {
                                 var err_response = {
                                     "status": "error",
@@ -181,7 +158,7 @@ exports.usersPost = function(request, response)
                             else
                             {
                                 response.write(JSON.stringify(save_response));
-                                response.end("\r\n");
+                                response.end();
                             }
                         });
 
@@ -197,7 +174,7 @@ exports.usersPost = function(request, response)
             mc.connect(dbs, function(err, db) {
                 if (err)
                     throw(err);
-                var collection = db.collection("users", function(err, collection) {
+                var collection = db.collection("chickens", function(err, collection) {
 //                    collection.remove({
 //                        "recid" : {"$eq": Number(delsel[0]) }
 //                    }, function(err, removed) {

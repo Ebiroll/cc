@@ -30,6 +30,18 @@ $(function() {
 	var markers = {};
 	var active = false;
 
+	socket.on('load:chickens', function(data) {
+                console.log("got",data);
+		if (!(data.id in connects)) {
+			setMarker(data);
+		}
+
+		connects[data.id] = data;
+		connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
+	});
+
+
+
 	socket.on('load:coords', function(data) {
                 console.log("got",data);
 		if (!(data.id in connects)) {
