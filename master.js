@@ -68,7 +68,12 @@ function testMe(req,res) {
 var fs  = require('fs')
 
 
-
+app.get('/js/user.js',passport.authenticate('basic', { session: false }),function(req,res) {
+ var user = auth(req);
+ var response;
+ response = "var username= \"" + user.name + "\";";
+ res.send(response);
+});
 
 app.get('/js/application2.js',passport.authenticate('basic', { session: false }),function(req,res) {
   var user = auth(req);

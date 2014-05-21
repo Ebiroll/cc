@@ -5,7 +5,7 @@
     <link rel="stylesheet" type="text/css" href="../css/w2ui-1.3.2.css" />
     <script type="text/javascript" src="../js/jquery.js"></script>
     <script type="text/javascript" src="../js/w2ui-1.3.2.min.js"></script>
-    <script type="text/javascript" src="menubar.js"></script>
+    <script type="text/javascript" src="../menubar.js"></script>
 </head>
 
 <body>
@@ -48,8 +48,10 @@ var config = {
 //                        { field: 'recid', hidden : true , caption: 'recid', size: '20px' } ,
                     	{ field: '_id', caption: 'User id', size: '10%', sortable: true, searchable: true },
 			{ field: 'name', caption: 'Name', size: '30%', sortable: true, searchable: true },
-                        { field: 'lastlat', caption: 'Status', size: '10%', sortable: true, searchable: true }
-                        { field: 'lastlon', caption: 'Status', size: '10%', sortable: true, searchable: true }
+                        { field: 'lastlat', caption: 'lat', size: '10%', sortable: true, searchable: true },
+                        { field: 'lastlng', caption: 'lon', size: '10%', sortable: true, searchable: true },
+                        { field: 'points', caption: 'points', size: '10%', sortable: true, searchable: true }
+ 
 		],
                 url		: 'records.json',
 		onClick: function(event) {
@@ -71,16 +73,16 @@ var config = {
 		}
 	},
 	form: { 
-		header: 'DDC',
+		header: 'Users',
 		name: 'form',
                 url		: 'records.json',
 		fields: [  // recid needs to be first and can be hidden
  			{ name: '_id', type: 'int',required: true, html: { caption: 'Id', attr: 'size="30"' } },
-                        { name: 'name', type: 'text', required: true, html: { caption: 'Host Name', attr: 'size="50" maxlength="100"' } },
- 			{ name: 'lastlat', type: 'int',required: true, html: { caption: 'Id', attr: 'size="30"' } },
- 			{ name: 'lastlon', type: 'int',required: true, html: { caption: 'Id', attr: 'size="30"' } },
-
-                            } },
+                        { name: 'name', type: 'text', required: true, html: { caption: 'Name', attr: 'size="50" maxlength="100"' } },
+ 			{ name: 'lastlat', type: 'int',required: false, html: { caption: 'last lat', attr: 'size="30"' } },
+ 			{ name: 'lastlng', type: 'int',required: false, html: { caption: 'last lon', attr: 'size="30"' } },
+ 			{ name: 'points', type: 'int',required: true, html: { caption: 'points', attr: 'size="30"' } },
+                          
 
 		],
 		actions: {

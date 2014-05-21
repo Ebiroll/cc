@@ -108,7 +108,7 @@ exports.usersPost = function(request, response)
                             cursor.each(function(err, item) {
                                 if (item) {
                                     //console.log(item);
-                                    if (item.data.record)
+                                    if (item.data)
                                     {
                                         //console.log(item.data.record);
                                         item.data.selected=false;

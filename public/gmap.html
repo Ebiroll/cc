@@ -11,10 +11,12 @@
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDX8GX2kBCpb1qFD38jZ3shCIc-SjmdrlI&sensor=false">
     </script>
     <script src="js/jquery.js"></script>
+    <script src="js/user.js"></script>
+
+    
     <script src="lib/socket.io.js"></script>
     
     <script type="text/javascript">
-    var userId='test';    
         
     var doc = $(document);
     var connects = {};
@@ -40,7 +42,7 @@
 			active = true;
 
 			sentData = {
-				id: userId,
+				id: username,
 				active: active,
 				coords: [{
 					lat: lat,
