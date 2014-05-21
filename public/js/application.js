@@ -21,8 +21,24 @@ $(function() {
 			popupAnchor: [0, -30]
 		}
 	});
+        
+        var eggIcon = L.Icon.extend({
+		options: {
+			shadowUrl: '../assets/marker-shadow.png',
+			iconSize: [25, 25],
+			iconAnchor:   [12, 36],
+			shadowSize: [41, 41],
+			shadowAnchor: [12, 38],
+			popupAnchor: [0, -30]
+		}
+	});
+
+        
 	var redIcon = new tinyIcon({ iconUrl: '../assets/marker-red.png' });
 	var yellowIcon = new tinyIcon({ iconUrl: '../assets/marker-yellow.png' });
+	var userIcon = new tinyIcon({ iconUrl: '../assets/user.png' });
+       	var otherIcon = new tinyIcon({ iconUrl: '../assets/other.png' });
+	var chickenIcon = new eggIcon({ iconUrl: '../assets/egg-icon.png' });
 
 	var sentData = {};
 
@@ -30,27 +46,7 @@ $(function() {
 	var markers = {};
 	var active = false;
 
-	socket.on('load:chickens', function(data) {
-                console.log("got",data);
-		if (!(data.id in connects)) {
-			setMarker(data);
-		}
-
-		connects[data.id] = data;
-		connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
-	});
-
-
-
-	socket.on('load:coords', function(data) {
-                console.log("got",data);
-		if (!(data.id in connects)) {
-			setMarker(data);
-		}
-
-		connects[data.id] = data;
-		connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
-	});
+	
 
 	// check whether browser supports geolocation api
 	if (navigator.geolocation) {
@@ -66,7 +62,7 @@ $(function() {
 
 		// mark user's position
 		var userMarker = L.marker([lat, lng], {
-			icon: redIcon
+			icon: userIcon
 		});
 		// uncomment for static debug
 		// userMarker = L.marker([51.45, 30.050], { icon: redIcon });
@@ -83,18 +79,45 @@ $(function() {
 		}).addTo(map);
 
 
-		L.marker([59.4232389, 17.8295509]).addTo(map)
-			.bindPopup("<b>Hello world!</b><br />I am an egg").openPopup();
+		//L.marker([59.4232389, 17.8295509]).addTo(map)
+		//	.bindPopup("<b>Hello world!</b><br />I am an egg").openPopup();
 
-		L.circle([59.4232389, 17.8295509], 50, {
-			color: 'orange',
-			fillColor: '#f03',
-			fillOpacity: 0.5
-		}).addTo(map).bindPopup("I am a circle.");
+		//L.circle([59.4232389, 17.8295509], 50, {
+		//	color: 'orange',
+		//	fillColor: '#f03',
+		//	fillOpacity: 0.5
+		//}).addTo(map).bindPopup("I am a circle.");
 
                 
 		userMarker.addTo(map);
 		userMarker.bindPopup('<p>You are there! Your are ' + userId + '</p>').openPopup();
+                
+               socket = io.connect('/');
+
+
+              socket.on('load:chickens', function(data) {
+                        console.log("got",data);
+                        if (!(data.id in connects)) {
+                           addChicken(data);
+                        }
+
+                        connects[data.name] = data;
+                        connects[data.name].updated = $.now(); // shothand for (new Date).getTime()
+                });
+
+
+
+                socket.on('load:coords', function(data) {
+                        console.log("got",data);
+                        if (!(data.id in connects)) {
+                                addUser(data);
+                        }
+
+                        connects[data.id] = data;
+                        connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
+                });
+
+
                 
                 var popup = L.popup();
 
@@ -141,6 +164,26 @@ $(function() {
 			markers[data.id] = marker;
 		}
 	}
+
+	function addUser(data) {
+		for (var i = 0; i < data.coords.length; i++) {
+			var marker = L.marker([data.coords[i].lat, data.coords[i].lng], { icon: userIcon }).addTo(map);
+			marker.bindPopup('<p>' + data.id + ' is here!</p>');
+			markers[data.id] = marker;
+		}
+	}
+
+	function addChicken(data) {
+		        console.log("Add chicken", data.name);
+			var marker = L.marker([data.lat, data.lng], { icon: chickenIcon }).addTo(map);
+			marker.bindPopup('<p>' + data.name + ' is here!</p>');
+			markers[data.name] = marker;
+		
+	}
+
+
+
+
 
 	// handle geolocation api errors
 	function positionError(error) {

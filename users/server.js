@@ -38,7 +38,7 @@ exports.servePosition=function servePosition( socket )
                     }
                     else
                     {
-                        
+                        db.close();
                         console.log("my array",array);
                         return(array);
                     }
@@ -68,6 +68,8 @@ exports.savePosition=function(thePos)
               if (err) {
                   console.log("failed save",thePos);
               }
+              
+              db.close();
           });
       });
   });

@@ -80,7 +80,7 @@
 
         
     function setMarker(data) {
-           var image = 'assets/egg-icon.png';
+           var image = 'assets/user.png';
 
             for (var i = 0; i < data.coords.length; i++) {
               var myLatlng = new google.maps.LatLng(data.coords[i].lat, data.coords[i].lng);
@@ -106,7 +106,7 @@
                   title:data.lname,
                   icon: image
               });
-              markers[data.id] = marker;
+              markers[data.name] = marker;
             }
     
 
@@ -115,12 +115,12 @@
         
         socket.on('load:chickens', function(data) {
                 console.log("got chickendata",data);
-		if (!(data.id in connects)) {
+		if (!(data.name in connects)) {
 			setChicken(data);
 		}
 
-		connects[data.id] = data;
-		connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
+		connects[data.name] = data;
+		connects[data.name].updated = $.now(); // shothand for (new Date).getTime()
 	});
         
       	socket.on('load:coords', function(data) {
