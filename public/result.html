@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en" ng-app="app">
+<head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <title>Hem</title>
@@ -10,7 +11,6 @@
     <!-- Le styles -->
     <link href="index_files/bootstrap.css" rel="stylesheet">
     <link href="css/result.css" rel="stylesheet" media="screen">
-
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -83,47 +83,32 @@
 	       Må bäste man eller kvinna vinna
             </h3>
         </div>
-        <div id="no-more-tables">
-            <table class="col-md-12 table-bordered table-striped table-condensed cf">
-        		<thead class="cf">
-        			<tr>
-        				<th>Namn</th>
-        				<th class="numeric">Kycklingar</th>
-        			</tr>
-        		</thead>
-        		<tbody>
-        			<tr>
-        				<td data-title="Namn">Olle</td>
-        				<td data-title="Kycklingar" class="numeric">101</td>
-        			</tr>
-        			<tr>
-        				<td data-title="Namn">Ellinor</td>
-        				<td data-title="Kycklingar" class="numeric">97</td>
-        			</tr>
-        			<tr>
-        				<td data-title="Namn">Anna</td>
-        				<td data-title="Kycklingar" class="numeric">96</td>
-        			</tr>
-        			<tr>
-        				<td data-title="Namn">Ludvig</td>
-        				<td data-title="Kycklingar" class="numeric">93</td>
-        			</tr>
+        <div id="table1" ng-controller="TableCtrl">
+                                    
+        <table cellpadding="2" border="1" cellspacing="1">
+          <tr id="heading" >
+           <th>Name</th>
+          <th>Points</th>          
+        </tr>
 
-
-        		</tbody>
-        	</table>
+        <tr class="color2" ng-repeat="user in users">
+          <td>{{user.name}} </td>
+          <td>{{user.points}}</td>         
+        </tr>
+      </table>
+ 
+            
+            
         </div>
     </div>
-    <div class="row">
-        <p class="bg-success" style="padding:10px;margin-top:20px"><small><a href="http://elvery.net/demo/responsive-tables/#no-more-tables" target="_blank">Link</a> to original article</small></p>
-    </div>
+
 </div>
 
 
 
 
       <footer>
-        <p>© Team Chicken Chase 2014</p>
+        <p>© Team Chicken Chase 2015</p>
       </footer>
 
     </div> <!-- /container -->
@@ -134,7 +119,42 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript" src="/js/angular-1.3.15.js"></script>
     <script src="js/jquery.js"></script>
     <script src="js/bootstrap.min.js"></script>
 
+    <script>   
+    (function (app, ng) {
+  'use strict';
+
+  // <button ng-click="remove($index)">Remove</button>
+ 
+  app.controller('TableCtrl', ['$scope', '$http', function($scope,$http) {
+    $scope.users = [
+      {name :"olle",points : 10000},
+      {name :"kalle",points : 100},
+      {name :"nisse",points : 777}, 
+    ];
+
+       var postData={
+           sites         : "all",
+           cmd           : "get-records"
+       };
+        
+        var httpRequest = $http({
+            method: 'POST',
+            url: 'users/records.json',
+            data: postData,
+            cmd           : "get-records"
+        }).success(function(newdata, status) {
+            $scope.sites = newdata;
+        });
+  
+  }]);
+}(angular.module('app', []), angular));
+
+    
+    </script>   
+    
+    
 </body></html>
