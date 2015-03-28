@@ -147,7 +147,8 @@
             data: postData,
             cmd           : "get-records"
         }).success(function(newdata, status) {
-            $scope.sites = newdata;
+            $scope.users = newdata.records;
+            //console.log(newdata);
         });
   
   }]);
