@@ -32,7 +32,7 @@ exports.serveChickens=function serveChickens( socket )
                         //console.log(item);
                         if (item.data)
                         {
-                            if (Number(item.data)===1)
+                            if (Number(item.data.active)===1)
                             {
                                 socket.emit('load:chickens', item.data);
                                 console.log("serve",item.data);
