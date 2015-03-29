@@ -95,7 +95,7 @@ $(function() {
                socket = io.connect('/');
 
 
-              socket.on('load:chickens', function(data) {
+               socket.on('load:chickens', function(data) {
                         console.log("got",data);
                         if (!(data.id in connects)) {
                            addChicken(data);
@@ -117,6 +117,15 @@ $(function() {
                         connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
                 });
 
+                // $( "#dialog-message" )
+                socket.on('found:chicken', function(data) {
+                   var theChick="chickens/"+data;
+                   console.log("CHICKEN CAPTURE",theChick);
+                   // Set image
+                   $("#found-chicken").attr('src', theChick);
+                   $("#found-chicken").attr('style',"float: left; margin:0 7px 50px 0; width:200px; height:200px;");
+                   $("#ctext").text('Congratulations. :-) You have captured a chicken!');
+                });
 
                 
                 var popup = L.popup();

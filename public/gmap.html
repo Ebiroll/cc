@@ -113,7 +113,15 @@
     
 
     
-    
+        socket.on('found:chicken', function(data) {
+           var theChick="chickens/"+data;
+           console.log("CHICKEN CAPTURE",theChick);
+           // Set image
+           $("#found-chicken").attr('src', theChick);
+           $("#found-chicken").attr('style',"float: left; margin:0 7px 50px 0; width:200px; height:200px;");
+           $("#ctext").text('Congratulations. :-) You have captured a chicken!');
+        });
+
         
         socket.on('load:chickens', function(data) {
                 console.log("got chickendata",data);
@@ -148,6 +156,10 @@
     </script>
   </head>
   <body>
+    <div id="dialog-message">
+    <p id="ctext"></p>
+    <img id="found-chicken" src = "" style ="float: left;width:0px; height:0px;"></img>
+    </div>     
     <div id="map-canvas"/>
   </body>
 </html>

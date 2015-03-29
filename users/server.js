@@ -87,9 +87,75 @@ exports.servePosition=function servePosition( socket )
     return(array);
 }
 
-exports.savePosition=function(thePos)
+updatePoints=function(thePos)
+{
+    console.log("update points", thePos);
+    mc.connect(dbs, function(err, db) {
+        //throw(err);
+        db.collection("users", function(err, users) {
+            users.find({"data.name": thePos.id}).toArray(function(err, docs) {
+                var doc = docs[0];
+                doc.data.points = Number(doc.data.points )+1; 
+                users.save(doc, {w: 1}, function(err, result) {
+                    if (err) {
+                        console.log("failed save", thePos);
+                    }
+
+                    db.close();
+                });
+            });
+        });
+    })
+    
+}
+
+
+checkForChickens=function(thePos,socket)
+{
+        console.log("give me chickens",thePos);
+        mc.connect(dbs, function(err, db) {
+            //throw(err);
+            db.collection("chickens", function(err, chickens) {
+            console.log("checking chickens");
+            chickens.find().sort({ _id : 1},function(err, cursor) {
+                var j = 0;
+                cursor.each(function(err, item) {
+                    if (item) console.log("found---",item.data.active);                        
+                    if (item) {
+                        if ( Number(item.data.active) === 1) {
+                            //console.log(item);
+                            if ((Math.abs(Number(thePos.coords[0].lat)-Number(item.data.lat))<0.001) &&
+                                (Math.abs(Number(thePos.coords[0].lng)-Number(item.data.lng))<0.001)) {
+                                socket.emit('found:chicken', item.data.smallimg);
+                                console.log("found@@@@@@@@",item.data);
+                                updatePoints(thePos);
+                                item.data.active="0";
+
+                                chickens.save(item, {w: 1}, function(err, docs) {
+                                              if (err) {
+                                                  console.log("failed save",item);
+                                              }                           
+                                          });
+                            }
+                        }
+                                                
+                    }
+                    else
+                    {   
+                        db.close();
+                        // No chickens found :-P
+                    }
+                });
+            });
+        });
+    });
+}
+
+
+exports.savePosition=function(thePos,socket)
 {
     console.log("SAVE Positions");
+    checkForChickens(thePos,socket)
     mc.connect(dbs, function(err, db) {
       if (err)
           throw(err);

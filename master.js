@@ -118,7 +118,7 @@ io.sockets.on('connection', function (client) {
     
 	client.on('send:coords', function (data) {
                 //console.log(data);
-                users.savePosition(data);
+                users.savePosition(data,client);
                 
                 users.servePosition(client);
   	});

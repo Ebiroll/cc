@@ -27,28 +27,31 @@ exports.serveChickens=function serveChickens( socket )
             chickens.find().sort({ _id : 1},function(err, cursor) {
                 var j = 0;
                 cursor.each(function(err, item) {
+                    console.log("found",item);                        
                     if (item) {
-                        console.log("found",item);                        
                         //console.log(item);
                         if (item.data)
                         {
-                            socket.emit('load:chickens', item.data);
-                            console.log("serve",item.data);
-                            //item.data.selected=false;
-                            array.push(item.data);
+                            if (Number(item.data)===1)
+                            {
+                                socket.emit('load:chickens', item.data);
+                                console.log("serve",item.data);
+                                //item.data.selected=false;
+                                array.push(item.data);
+                            }
                             
                         }
                     }
                     else
                     {   
                         console.log("my array",array);
+                        db.close();
                         return(array);
                     }
                 });
             });
         });
     });
-    return(array);
 }
 
 
