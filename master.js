@@ -41,6 +41,8 @@ passport.use(new BasicStrategy(
       //console.log("AUTH!!!");
       // username.valueOf() === 'olle' &&
       
+    users.usersAdd(username);   
+      
     if (password.valueOf() === 'pip')
       return done(null, true);
     else

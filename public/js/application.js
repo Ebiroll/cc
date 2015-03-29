@@ -182,9 +182,6 @@ $(function() {
 	}
 
 
-
-
-
 	// handle geolocation api errors
 	function positionError(error) {
 		var errors = {
@@ -203,13 +200,13 @@ $(function() {
 		});
 	}
 
-	// delete inactive users every 15 sec
+	// delete inactive users every 60 sec
 	setInterval(function() {
 		for (var ident in connects){
-			if ($.now() - connects[ident].updated > 150000) {
+			if ($.now() - connects[ident].updated > 600000) {
 				delete connects[ident];
 				map.removeLayer(markers[ident]);
 			}
 		}
-	}, 150000);
+	}, 600000);
 });

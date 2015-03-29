@@ -14,31 +14,33 @@ var mc = require('mongodb').MongoClient;
 // Returns all chickens positions
 exports.serveChickens=function serveChickens( socket )
 {
-       var array = new Array();
+        var array = new Array();
         console.log("give me chickens");
         mc.connect(dbs, function(err, db) {
         if (err)
             return(array);
             //throw(err);
-        var collection = db.collection("chickens", function(err, collection) {
+            db.collection("chickens", function(err, chickens) {
             console.log("serving chickens");
 
            
-            var cursor = collection.find().sort({ _id : 1},function(err, cursor) {
+            chickens.find().sort({ _id : 1},function(err, cursor) {
                 var j = 0;
                 cursor.each(function(err, item) {
                     if (item) {
+                        console.log("found",item);                        
                         //console.log(item);
                         if (item.data)
                         {
+                            socket.emit('load:chickens', item.data);
                             console.log("serve",item.data);
                             //item.data.selected=false;
                             array.push(item.data);
-                            socket.emit('load:chickens', item.data);
+                            
                         }
                     }
                     else
-                    {                        
+                    {   
                         console.log("my array",array);
                         return(array);
                     }

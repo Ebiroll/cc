@@ -10,6 +10,43 @@ var dbs = "mongodb://localhost:27017/cc";
 
 var mc = require('mongodb').MongoClient;
 
+exports.usersAdd= function(username) {
+    mc.connect(dbs, function(err, db) {
+        if (err)
+            throw(err);
+            db.collection("users", function(err, userscoll) {
+               console.log("Add user!!",username);
+               userscoll.find().toArray(function(err, docs) {
+                   //console.log(docs);
+                   var found=false;
+                   for (var ix=0;ix<docs.length;ix++)
+                   {
+                       if (docs[ix].data.name===username)
+                       {
+                           found=true;
+                       }
+                   }
+                   
+                   if (found===false)
+                   {
+                        var record = {
+                            _id:docs.length+1,
+                            name: username,
+                            points: 0
+                        }
+                        var doc = {_id: Number(docs.length+1),
+                             recid: docs.length+1,
+                             data: record
+                         };
+
+                        userscoll.save(doc, {w: 1}, function(err, docs) {
+                            
+                        });
+                    }                   
+               });
+           });
+       });
+};
 
 exports.servePosition=function servePosition( socket )
 {
