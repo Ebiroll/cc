@@ -82,7 +82,20 @@
 
         
     function setMarker(data) {
-           var image = 'assets/user.png';
+           //var image = 'assets/user.png';
+           
+           var image = {
+            url: 'assets/user.png',
+            // This marker is 20 pixels wide by 32 pixels tall.
+            size: new google.maps.Size(40, 79),
+            // The origin for this image is 0,0.
+            origin: new google.maps.Point(0,0),
+            // The anchor for this image is the base of the flagpole at 0,32.
+            anchor: new google.maps.Point(0, 40),
+            scaledSize: new google.maps.Size(20, 40)
+
+          };
+
 
             for (var i = 0; i < data.coords.length; i++) {
               var myLatlng = new google.maps.LatLng(data.coords[i].lat, data.coords[i].lng);
@@ -90,7 +103,8 @@
                   position: myLatlng,
                   map: map,
                   title:data.id,
-                  icon: image
+                  icon: image,
+                  size: new google.maps.Size(10, 10)
               });
               markers[data.id] = marker;
             }
@@ -146,8 +160,8 @@
         
       function initialize() {
         var mapOptions = {
-          center: new google.maps.LatLng(59.4232389, 17.8295509),
-          zoom: 8
+          center: new google.maps.LatLng(59.4232, 17.82952),
+          zoom: 16
         };
         map = new google.maps.Map(document.getElementById("map-canvas"),
             mapOptions);
