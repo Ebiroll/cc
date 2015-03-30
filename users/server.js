@@ -206,7 +206,7 @@ exports.usersPost = function(request, response)
                         console.log("find!!");
 
                         var array = new Array();
-                        var cursor = collection.find().sort({ "data.points" : 1},function(err, cursor) {
+                        var cursor = collection.find().sort({ "data.points" : -1},function(err, cursor) {
                             var j = 0;
                             cursor.each(function(err, item) {
                                 if (item) {
