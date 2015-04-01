@@ -131,6 +131,9 @@ app.set('json spaces', 0);
 //app.get("/users/users.json", users.getUsers);
 app.post("/users/records.json", users.usersPost);
 
+app.post("/users/positions.json", users.positionPost);
+
+
 app.post("/chickens/records.json", chickens.chickensPost);
 
 
