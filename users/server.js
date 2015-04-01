@@ -461,7 +461,7 @@ exports.positionPost = function(request, response)
                         var coord={
                             lat : Number(request.body.record["lat"]),
                             lng : Number(request.body.record["lng"]),
-                            acr : Mumber(request.body.record["acr"])
+                            acr : Number(request.body.record["acr"])
                         };
                                                 
                         doc.data.coords=new Array;
