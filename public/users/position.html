@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Positions</title>
+    <link rel="stylesheet" type="text/css" href="../css/w2ui-1.4.2.css" />
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script type="text/javascript" src="../js/w2ui-1.4.2.min.js"></script>
+    <script type="text/javascript" src="../menubar.js"></script>
+</head>
+
+<body>
+
+<div id="layout" style="width: 100%; height: 500px;"></div>
+
+
+<script type="text/javascript">
+// widget configuration
+var config = {
+            // var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
+	layout: {
+		name: 'layout',
+		padding: 4,
+		panels: [
+                    	{ type: 'top',  size: 28 ,  resizable: true, minSize: 28 },
+			{ type: 'left', size: '50%', resizable: true, minSize: 500 },
+			{ type: 'main', minSize: 500 }
+                        
+		]
+	},
+        toolbar: {
+                name: 'toolbar',
+		items: [
+			{ type: 'button',  id: 'item1',  caption: 'Item 1', img: 'icon-page', hint: 'Hint for item 1' },
+                ],
+		onClick: function (event) {
+			console.log('Target: '+ event.target, event);
+		}
+            },
+
+	grid: { 
+		name: 'grid',
+		show: {
+			toolbar			: true,
+			toolbarDelete	: true
+		},
+                multiSelect : false,
+		columns: [  // Must be first and hidden
+//                        { field: 'recid', hidden : true , caption: 'recid', size: '20px' } ,
+                    	{ field: '_id', caption: 'User id', size: '10%', sortable: true, searchable: true },
+                        { field: 'recid', caption: 'recid', size: '10%', sortable: true, searchable: true },   
+			{ field: 'active', caption: 'Active', size: '30%', sortable: true, searchable: true },
+                        { field: 'lat', caption: 'lat', size: '10%', sortable: true, searchable: true },
+                        { field: 'lng', caption: 'lng', size: '10%', sortable: true, searchable: true },
+                        { field: 'acr', caption: 'acr', size: '10%', sortable: true, searchable: true }
+ 
+		],
+                url		: 'positions.json',
+		onClick: function(event) {
+			var grid = this;
+			var form = w2ui.form;
+			console.log(event);
+			event.onComplete = function () {
+				var sel = grid.getSelection();
+				console.log(sel);
+				if (sel.length == 1) {
+					form.recid  = sel[0];
+					form.record = $.extend(true, {}, grid.get(sel[0]));
+                                        form.record.selected=false;
+					form.refresh();
+				} else {
+					form.clear();
+				}
+			}
+		}
+	},
+	form: { 
+		header: 'Positions',
+		name: 'form',
+                url		: 'positions.json',
+		fields: [  // recid needs to be first and can be hidden
+ 			{ name: '_id', type: 'text',required: true, html: { caption: 'Id', attr: 'size="30"' } },
+                        { name: 'active', type: 'checkbox', required: true, html: { caption: 'Active', attr: 'size="50" maxlength="10"' } },
+ 			{ name: 'lat', type: 'float',required: false, html: { caption: 'last lat', attr: 'size="30"' } },
+ 			{ name: 'lng', type: 'float',required: false, html: { caption: 'last lon', attr: 'size="30"' } },
+ 			{ name: 'acr', type: 'int',required: false, html: { caption: 'Accuracy', attr: 'size="30"' } },
+                          
+
+		],
+		actions: {
+			New: function () {
+				this.clear();
+                                location.reload(true);
+			},
+			Save: function () {
+				var errors = this.validate();
+				if (errors.length > 0) return;
+				if (this.recid == 0) {
+					w2ui.grid.add($.extend(true, { recid: w2ui.grid.records.length + 1 }, this.record));
+					w2ui.grid.selectNone();
+                                        this.recid = w2ui.grid.records.length;
+				} else {
+					w2ui.grid.set(this.recid, this.record);
+					w2ui.grid.selectNone();
+				}
+                                this.save();
+                                //location.reload(true);
+			}
+		}
+	}
+}
+
+$(function () {
+        w2utils.settings.date_format = 'yyyy-mm-dd';
+
+	// initialization
+        
+        
+	$('#layout').w2layout(config.layout);
+        w2ui.layout.content('top',$().w2toolbar(topconfig));
+	w2ui.layout.content('left', $().w2grid(config.grid));
+	w2ui.layout.content('main', $().w2form(config.form));
+        
+        //w2ui.toolbar.on('*', function (event) { 
+        //   console.log('EVENT: '+ event.type + ' TARGET: '+ event.target, event);
+        //});
+        // 
+        //setupMenubar();
+        //w2ui.layout.content('bottom', $().w2form(config.form));
+        //w2ui.layout.content('bottom','#bottom');
+
+});
+
+</script>
+
+
+</body>
+</html>
