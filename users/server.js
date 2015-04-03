@@ -29,13 +29,23 @@ exports.usersAdd= function(username) {
                    
                    if (found===false)
                    {
+                         var maxNum=docs.length+1;
+                         for (var q=0;q<docs.length;q++)
+                         {
+                             if (maxNum==Number(docs[q]._id))
+                             {
+                                 maxNum=Number(docs[q]._id)+1;
+                             }
+                         }
+
+                       
                         var record = {
-                            _id:docs.length+1,
+                            _id:maxNum,
                             name: username,
                             points: 0
                         }
-                        var doc = {_id: Number(docs.length+1),
-                             recid: docs.length+1,
+                        var doc = {_id: Number(maxNum),
+                             recid: Number(maxNum),
                              data: record
                          };
 
