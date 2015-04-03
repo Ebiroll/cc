@@ -28,24 +28,14 @@ exports.usersAdd= function(username) {
                    }
                    
                    if (found===false)
-                   {
-                         var maxNum=docs.length+5;
-                         for (var q=0;q<docs.length;q++)
-                         {
-                             if (maxNum==Number(docs[q]._id))
-                             {
-                                 maxNum=Number(docs[q]._id)+1;
-                             }
-                         }
-
-                       
+                   {                     
                         var record = {
-                            _id:maxNum,
+                            _id: username,
                             name: username,
                             points: 0
                         }
-                        var doc = {_id: Number(maxNum),
-                             recid: Number(maxNum),
+                        var doc = {_id: username,
+                             recid: docs.length+1,
                              data: record
                          };
 
@@ -230,7 +220,7 @@ exports.usersPost = function(request, response)
 
                                         j++;
 
-                                        collection.update(
+                                         collection.update(
                                          { _id :  item._id },
                                          { $set: { recid : j } },
                                          { w : 0}
