@@ -29,7 +29,7 @@ exports.usersAdd= function(username) {
                    
                    if (found===false)
                    {
-                         var maxNum=docs.length+1;
+                         var maxNum=docs.length+5;
                          for (var q=0;q<docs.length;q++)
                          {
                              if (maxNum==Number(docs[q]._id))
