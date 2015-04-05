@@ -33,6 +33,18 @@ $(function() {
 		}
 	});
 
+        var kaninIcon = L.Icon.extend({
+		options: {
+			shadowUrl: '../assets/marker-shadow.png',
+			iconSize: [30, 50],
+			iconAnchor:   [15, 25],
+			shadowSize: [40, 40],
+			shadowAnchor: [20, 20],
+			popupAnchor: [0, -30]
+		}
+	});
+
+
         
 	var redIcon = new tinyIcon({ iconUrl: '../assets/marker-red.png' });
 	var yellowIcon = new tinyIcon({ iconUrl: '../assets/marker-yellow.png' });
@@ -137,7 +149,7 @@ $(function() {
 				.openOn(map);
 		}
 
-		map.on('click', onMapClick);
+		//map.on('click', onMapClick);
 
 		var emit = $.now();
 		// send coords on when user is active
@@ -184,7 +196,21 @@ $(function() {
 
 	function addChicken(data) {
 		        console.log("Add chicken", data.name);
-			var marker = L.marker([data.lat, data.lng], { icon: chickenIcon }).addTo(map);
+                        
+                        if ( data.eggimg )
+                        {
+                            var path='/chickens/' + data.eggimg;
+                            //console.log("PATH:::::::::::",path);
+                            var markerIcon=new kaninIcon({ iconUrl: path });
+                            var marker = L.marker([data.lat, data.lng], { icon: markerIcon }).addTo(map);
+
+                        }
+                        else
+                        {
+                            var marker = L.marker([data.lat, data.lng], { icon: chickenIcon }).addTo(map);
+
+                        }
+    
 			marker.bindPopup('<p>' + data.name + ' is here!</p>');
 			markers[data.name] = marker;
 		

@@ -52,7 +52,8 @@ var config = {
                         { field: 'description', caption: 'Descr', size: '30%', sortable: false , searchable: true },
                         { field: 'lat', caption: 'Lat', size: '20%', sortable: false, searchable: true },
                         { field: 'lng', caption: 'Lon', size: '20%', sortable: false, searchable: false },
-                        { field: 'smallimg', caption: 'img', size: '10%', sortable: false, searchable: false },
+                        { field: 'smallimg', caption: 'img', size: '10%', sortable: false, searchable: false },                        
+                        { field: 'eggimg', caption: 'img', size: '10%', sortable: false, searchable: false },
                         // { field: 'bigimg', caption: 'bigImage', size: '10%', sortable: false, searchable: false } ,
                         { field: 'active', caption: 'active', size: '10%', sortable: false, searchable: false }                     
 		],
@@ -90,6 +91,7 @@ var config = {
  			{ name: 'lat', type: 'text',required: true, html: { caption: 'Lat', attr: 'size="30"' } },
  			{ name: 'lng', type: 'text',required: true, html: { caption: 'Lon', attr: 'size="30"' } },
             		{ name: 'smallimg', type: 'text',required: true, html: { caption: 'img', attr: 'size="30"' } },
+            		{ name: 'eggimg', type: 'text',required: true, html: { caption: 'eggimg', attr: 'size="30"' } },                       
             		// { name: 'bigimg', type: 'upload', required: true, html: { caption: 'Chicken img', attr: 'size="30"' } },
             		{ name: 'active', type: 'int', required: true, html: { caption: 'active', attr: 'size="10"' } }
 		],
