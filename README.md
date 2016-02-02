@@ -11,14 +11,16 @@ http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fed
 adduser cc
 passwd cc
 
-git clone ssh://git@109.74.193.230/var/extra/cc.git
+git clone ssh://github.com/Ebiroll/cc.git
 
 
 INSTALL
 =========
 Installing dependancies could be done with package.json
-or manually with
+npm install
 
+
+or manually with
 npm install express
 npm install mongodb
 npm install body-parser
@@ -30,8 +32,6 @@ The file index.html contain links to all important pages
 
 DATABASE
 =========
-To initiate the database with all sites do,
-
 
 Useful database commands,
 
@@ -41,8 +41,8 @@ users
 
 
 >mongo
->use mms
->db.campaigns.find()
+>use cc
+>db.users.find()
 >show collections
 
->db.campaigns.drop()
+>db.users.drop()
