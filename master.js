@@ -11,18 +11,25 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var auth = require("basic-auth");
 
-var app = require('express')()
-  , server = require('http').createServer(app)
-  , io = require('socket.io').listen(server);
+//var app = require('express')()
+//  , server = require('http').createServer(app)
+//  , io = require('socket.io').listen(server);
 
 var port = 10180;
+ 
+var express = require('express');
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+server.listen(process.env.PORT || port);
+console.log('Server is running ');
+
 
 var morgan = require('morgan');
 var users = require('./users/server.js');
 var chickens = require('./chickens/server.js');
 
-
-var userList = [ "admin" , "Ellinor" , "Olle" , "Alex" , "Ludvig" , "Anna" , "Guest" ];
+var userList = [ "admin" , "Ellinor" , "Olle" , "Alex" , "Ludvig" , "Anna" , "Lars" , "Guest" ];
 
 app.use(bodyParser());
 app.use(morgan("dev"));
@@ -33,6 +40,9 @@ app.use(morgan("dev"));
 
 var passport = require('passport');
 var BasicStrategy = require('passport-http').BasicStrategy;
+
+app.use(express.static('js'));
+
 
 //var lastUser=Olle;
         
@@ -50,6 +60,12 @@ passport.use(new BasicStrategy(
   }
 ));
 
+app.use(require('express-session')({ 
+  secret: 'Enter your secret key',
+  resave: true,
+  saveUninitialized: true
+}));
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use('/',passport.authenticate('basic', { session: false }));
@@ -61,10 +77,10 @@ function testMe(req,res) {
 };
 
 
-//app.get('/users/users.html', function(req,res) {
-//  res.sendfile('users/users.html');
-//});
-//app.use(express.static(__dirname + '/users/users.html'));
+app.get('/users/users.html', function(req,res) {
+  res.sendfile('users/users.html');
+});
+app.use(express.static(__dirname + '/users/users.html'));
 
 
 var fs  = require('fs')
@@ -109,20 +125,22 @@ app.get("/about", function(request, response) {
 
 
 // delete to see more logs from sockets
-io.set('log level', 1);
+// io.set('log level', 2);
 
 io.sockets.on('connection', function (client) {
     
         console.log("connected");
         chickens.serveChickens(client);
     
-	client.on('send:coords', function (data) {
+	  client.on('send:coords', function (data) {
                 //console.log(data);
                 users.savePosition(data,client);
                 
                 users.servePosition(client);
   	});
 });
+
+
 
 // Not necessary??
 app.set('json spaces', 0);
@@ -138,5 +156,5 @@ app.post("/chickens/records.json", chickens.chickensPost);
 
 
 //app.listen(port);
-server.listen(port);
+//server.listen(port);
 console.log('Your server goes on localhost:' + port);

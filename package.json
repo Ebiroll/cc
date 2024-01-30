@@ -4,13 +4,15 @@
     "version": "0.0.1",
     "main": "./master.js",
     "dependencies": {
-        "mongodb" : "*",
+        "basic-auth": "*",
+        "body-parser": "*",
         "express": "4.x",
+        "express-session": "^1.18.0",
+        "mongodb": "*",
         "morgan": "*",
-        "body-parser" : "*",
-        "basic-auth"  : "*", 
-        "passport"  : "*" ,
-        "passport-http"  : "*"        
+        "passport": "*",
+        "passport-http": "*",
+        "socket.io": "^4.7.4"
     },
     "author": {
         "name": "Olof Astrand",
@@ -19,12 +21,12 @@
     "keywords": [],
     "licenses": {
         "type": "none"
-    }, 
+    },
     "repository": {
         "type": "git",
-        "url": "ssh://git@li140-230.members.linode.com/var/extra/cc.git"
+        "url": "http://github.com/Ebiroll/cc"
     },
     "bugs": {
-        "url": "http://github.com/YOUR_LOGIN/Hello World/issues"
+        "url": "http://github.com/Ebiroll/cc/issues"
     }
 }
