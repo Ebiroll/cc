@@ -2,8 +2,8 @@
 var map;
 $(function() {
 	// generate unique user id
-	//var userId = Math.random().toString(16).substring(2,15);
-	var userId =username;
+	var userId = Math.random().toString(16).substring(2,15);
+	//var userId =username;
                 
         //console-log("User",)
         
@@ -78,16 +78,16 @@ $(function() {
 		});
 		// uncomment for static debug
 		// userMarker = L.marker([51.45, 30.050], { icon: redIcon });
-
+		// https://{s}.tiles.mapbox.com/v4/olof-astrand.i90p08cm/{z}/{x}/{y}.png
 		// load leaflet map
                 map = L.map('map').setView([59.4232389, 17.8295509], 13);
+				
 
-		L.tileLayer('https://{s}.tiles.mapbox.com/v3/olof-astrand.i90p08cm/{z}/{x}/{y}.png', {
+		L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			maxZoom: 18,
-			//attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-			//	'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-			//	'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-			id: 'chicken.map'
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>'
+			//	contributors, ' + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+			//	'Imagery © <a href="http://mapbox.com">Mapbox</a>'
 		}).addTo(map);
 
 
