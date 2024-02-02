@@ -129,8 +129,8 @@ app.get("/about", function(request, response) {
 
 io.sockets.on('connection', function (client) {
     
-        console.log("connected");
-        chickens.serveChickens(client);
+    console.log("connected");
+    chickens.serveChickens(client);
     
 	  client.on('send:coords', function (data) {
                 //console.log(data);
@@ -165,6 +165,10 @@ app.post("/users/positions.json",  (req, res)=>{
 
 app.post("/chickens/records.json", (req, res)=>{
   chickens.chickensPost(req, res);
+});
+
+app.get("/chickens/records.json", (req, res)=>{
+  chickens.chickensGet(req, res);
 });
 
 

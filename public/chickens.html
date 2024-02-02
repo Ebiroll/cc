@@ -10,7 +10,7 @@
 
 <body>
 
-<div id="layout" style="width: 100%; height: 500px;"></div>
+<div id="layout" style="width: 100%; height: 200px;"></div>
 
 
 <script type="text/javascript">
@@ -21,10 +21,9 @@ var config = {
 		name: 'layout',
 		padding: 4,
 		panels: [
-                    	{ type: 'top',  size: 28 ,  resizable: true, minSize: 28 },
+            { type: 'top',  size: 28 ,  resizable: true, minSize: 28 },
 			{ type: 'left', size: '50%', resizable: true, minSize: 500 },
-			{ type: 'main', minSize: 500 }
-                        
+			{ type: 'main', minSize: 500 }            
 		]
 	},
         toolbar: {
@@ -94,15 +93,15 @@ var config = {
                         },                        
  			{ name: 'lat', type: 'text',required: true, html: { caption: 'Lat', attr: 'size="30"' } },
  			{ name: 'lng', type: 'text',required: true, html: { caption: 'Lon', attr: 'size="30"' } },
-            		{ name: 'smallimg', type: 'text',required: true, html: { caption: 'img', attr: 'size="30"' } },
-            		{ name: 'eggimg', type: 'text',required: false, html: { caption: 'eggimg', attr: 'size="30"' } },                       
-            		// { name: 'bigimg', type: 'upload', required: true, html: { caption: 'Chicken img', attr: 'size="30"' } },
-            		{ name: 'active', type: 'int', required: true, html: { caption: 'active', attr: 'size="10"' } }
+            { name: 'smallimg', type: 'text',required: true, html: { caption: 'img', attr: 'size="30"' } },
+            { name: 'eggimg', type: 'text',required: false, html: { caption: 'eggimg', attr: 'size="30"' } },                       
+            // { name: 'bigimg', type: 'upload', required: true, html: { caption: 'Chicken img', attr: 'size="30"' } },
+            { name: 'active', type: 'int', required: true, html: { caption: 'active', attr: 'size="10"' } }
 		],
 		actions: {
       			Upload: function () {
-                            // Some weird ajax call??
-                        },
+                        // Some weird ajax call??
+                },
 			New: function () {
 				this.clear();
                                 //w2ui.for
@@ -112,6 +111,7 @@ var config = {
                                 console.log("Save");
 				var errors = this.validate();
 				if (errors.length > 0) return;
+				// Achtung 4711
 				if (this.recid == 4711) {
 					w2ui.grid.add($.extend(true, { recid: w2ui.grid.records.length + 1 }, this.record));
 					w2ui.grid.selectNone();
@@ -120,9 +120,9 @@ var config = {
 					w2ui.grid.set(this.recid, this.record);
 					w2ui.grid.selectNone();
 				}
-                                this.save();
+                this.save();
                                
-                                //location.reload(true);
+                //location.reload(true);
 			}
 		}
 	}
@@ -135,7 +135,7 @@ $(function () {
                 
 	$('#layout').w2layout(config.layout);
         //$().w2grid(config.home_groups);
-        w2ui.layout.content('top',$().w2toolbar(topconfig));
+    w2ui.layout.content('top',$().w2toolbar(topconfig));
 	w2ui.layout.content('left', $().w2grid(config.grid));
 	w2ui.layout.content('main', $().w2form(config.form));
         
