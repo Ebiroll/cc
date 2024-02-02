@@ -1,14 +1,47 @@
-Chicken chase
-==============
+## Chicken chase
 
 Is now setup to run in codespaces dev container.
 
+   git clone ssh://github.com/Ebiroll/cc.git
 
 https://docs.github.com/en/codespaces/overview
 
-==============
 
-INSTALL node & mongodb 
+
+
+## INSTALL node & mongodb 
+
+# Ubuntu
+
+sudo apt update && sudo apt upgrade -y
+
+sudo apt install nodejs npm -y
+
+# Ubuntu on MongoDB
+
+   wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-archive-keyring.gpg
+
+   echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-archive-keyring.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/5.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+
+   sudo apt update
+
+   sudo apt install mongodb-org -y
+
+Start mongo manually,
+
+   sudo mongod --dbpath /var/lib/mongodb
+Test connection with,
+
+# mongo (The MongoDB Shell)
+Legacy Shell: mongo is the original MongoDB shell that has been part of MongoDB distributions for many years. It is written in JavaScript and provides a powerful interface to MongoDB databases for running queries, manipulating data, and performing administrative tasks.
+JavaScript Engine: It uses the Mozilla SpiderMonkey JavaScript engine.
+Deprecated: Available from v3.6 and deprecated from  v4.4
+
+# mongosh (The New MongoDB Shell)
+Modern Shell: mongosh is the modern, next-generation MongoDB Shell that aims to improve user experience with enhanced usability features and a more intuitive scripting environment. It was introduced to address some of the limitations of the mongo shell and provide a better interface for interacting with MongoDB databases.
+
+
+## Centos install
 
 A bit old, but still informational.
 
@@ -17,14 +50,10 @@ https://www.digitalocean.com/community/articles/how-to-install-and-run-a-node-js
 http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/
 
 
-adduser cc
-passwd cc
-
-git clone ssh://github.com/Ebiroll/cc.git
 
 
-INSTALL
-=========
+
+## INSTALL
 Installing dependancies could be done with package.json
 npm install
 
@@ -38,19 +67,24 @@ Start with node master.js
 
 The file index.html contain links to all important pages
 
-DATABASE
-=========
+adduser cc
+passwd cc
+
+# DATABASE commands
+
 
 Useful database commands,
 
-database cc
-Contains collections
-users
+   database cc
+
+   Contains collections
+   users
+   chickens
 
 
->mongosh
->use cc
->db.users.find()
->show collections
+   > mongosh or mongo
+   > use cc
+   > db.users.find()
+   > show collections
 
->db.users.drop()
+   > db.users.drop()

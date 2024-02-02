@@ -1,3 +1,4 @@
 node_modules/*
 bing/node_modules/*
 bing/dist/*
+public/js/w2ui/*

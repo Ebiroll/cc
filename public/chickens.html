@@ -2,20 +2,17 @@
 <html>
 <head>
     <title>Chickens</title>
-    <link rel="stylesheet" type="text/css" href="../css/w2ui-1.3.2.css" />
-    <script type="text/javascript" src="js/jquery.js"></script>
-    <script type="text/javascript" src="js/w2ui-1.3.2.min.js"></script>
-    <script type="text/javascript" src="menubar.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/w2ui-2.0.css" />
+    <script type="text/javascript" src="js/w2ui-2.0.js"></script>
 </head>
 
 <body>
 
-<div id="layout" style="width: 100%; height: 200px;"></div>
-
+<div id="main" style="width: 100%; height: 600px;"></div>
 
 <script type="text/javascript">
 // widget configuration
-var config = {
+let config = {
             // var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
 	layout: {
 		name: 'layout',
@@ -23,19 +20,9 @@ var config = {
 		panels: [
             { type: 'top',  size: 28 ,  resizable: true, minSize: 28 },
 			{ type: 'left', size: '50%', resizable: true, minSize: 500 },
-			{ type: 'main', minSize: 500 }            
+			{ type: 'main', minSize: 500, style: 'overflow: hidden' }            
 		]
 	},
-        toolbar: {
-                name: 'toolbar',
-		items: [
-			{ type: 'button',  id: 'item1',  caption: 'Item 1', img: 'icon-page', hint: 'Hint for item 1' }
-                ],
-		onClick: function (event) {
-			console.log('Target: '+ event.target, event);
-		}
-            },
-
 	grid: { 
 		name: 'grid',
 		show: {
@@ -43,54 +30,47 @@ var config = {
  			footer			: true,                       
 			toolbarDelete	: true
 		},
-                multiSelect : false,
-		columns: [  // Must be first and hidden
-//                        { field: 'recid', hidden : true , caption: 'recid', size: '20px' } ,
-                    	{ field: '_id', caption: 'id', size: '10%', sortable: true, searchable: true },
-			{ field: 'name', caption: 'Name', size: '30%', sortable: true, searchable: true },
-                        { field: 'lname', caption: 'Long Name', size: '30%', sortable: false, searchable: true },
-                        { field: 'description', caption: 'Descr', size: '30%', sortable: false , searchable: true },
-                        { field: 'lat', caption: 'Lat', size: '20%', sortable: false, searchable: true },
-                        { field: 'lng', caption: 'Lon', size: '20%', sortable: false, searchable: false },
-                        { field: 'smallimg', caption: 'img', size: '10%', sortable: false, searchable: false },                        
-                        { field: 'eggimg', caption: 'img', size: '10%', sortable: false, searchable: false },
-                        // { field: 'bigimg', caption: 'bigImage', size: '10%', sortable: false, searchable: false } ,
-                        { field: 'active', caption: 'active', size: '10%', sortable: false, searchable: false }                     
+         multiSelect : false,
+		columns: [  
+			// Must be first and hidden/                        { field: 'recid', hidden : true , text: 'recid', size: '20px' } ,
+                    	{ field: 'recid', text: 'id', hidden : true, size: '10%', sortable: true, searchable: true },
+			            { field: 'name', text: 'Name', size: '30%', sortable: true, searchable: true },
+                        { field: 'lname', text: 'Long Name', size: '30%', sortable: false, searchable: true },
+                        { field: 'description', text: 'Descr', size: '30%', sortable: false , searchable: true },
+                        { field: 'lat', captitexton: 'Lat', size: '20%', sortable: false, searchable: true },
+                        { field: 'lng', text: 'Lon', size: '20%', sortable: false, searchable: false },
+                        { field: 'smallimg', text: 'img', size: '10%', sortable: false, searchable: false },                        
+                        { field: 'eggimg', text: 'img', size: '10%', sortable: false, searchable: false },
+                        // { field: 'bigimg', text: 'bigImage', size: '10%', sortable: false, searchable: false } ,
+                        { field: 'active', text: 'active', size: '10%', sortable: false, searchable: false }                     
 		],
-                url		: 'chickens/records.json',
+        url		: 'chickens/records.json',
 		onClick: function(event) {
-			var grid = this;
-			var form = w2ui.form;
-			console.log(event);
-			event.onComplete = function () {
-				var sel = grid.getSelection();
-   				if (sel.length == 1) {
-					form.recid  = sel[0];
-					form.record = $.extend(true, {}, grid.get(sel[0]));
-                                        form.record.selected=false;
-					form.refresh();
-                                        console.log(form.record.lat,form.record.lng);
-   
-                                        CenterMap(form.record.lng,form.record.lat,form.record.name);                                
-                                        
-				} else {
-					form.clear();
-				}
-			}
+			console.log(event)
+            event.done(() => {
+                var sel = this.getSelection()
+                if (sel.length == 1) {
+                    form.recid = sel[0]
+                    form.record = w2utils.extend({}, this.get(sel[0]))
+                    form.refresh()
+                } else {
+                    form.clear()
+                }
+            })
 		}
 	},
 	form: { 
 		header: 'Chicken',
 		name: 'form',
-                url		: 'chickens/records.json',
+        url		: 'chickens/records.json',
 		fields: [  // recid needs to be first and can be hidden
- 			{ name: '_id', type: 'int',required: true, html: { caption: 'Id', attr: 'size="30"' } },
-                        { name: 'name', type: 'text', required: true, html: { caption: 'Name', attr: 'size="50" maxlength="100"' } },
-                        { name: 'lname', type: 'text', required: true, html: { caption: 'Long name', attr: 'size="50" maxlength="100"' } },
-                        { name: 'description', type: 'textarea', html: { 
-                                caption: 'Long Description', attr: "style='width: 350px; height: 80px; resize: none; white-space:normal;'" 
-                            } 
-                        },                        
+ 			{ name: 'recid', type: 'int',required: true, html: { caption: 'Id', attr: 'size="30"' } },
+            { name: 'name', type: 'text', required: true, html: { caption: 'Name', attr: 'size="50" maxlength="100"' } },
+            { name: 'lname', type: 'text', required: true, html: { caption: 'Long name', attr: 'size="50" maxlength="100"' } },
+            { name: 'description', type: 'textarea', html: { 
+            		caption: 'Long Description', attr: "style='width: 350px; height: 80px; resize: none; white-space:normal;'" 
+                } 
+            },                        
  			{ name: 'lat', type: 'text',required: true, html: { caption: 'Lat', attr: 'size="30"' } },
  			{ name: 'lng', type: 'text',required: true, html: { caption: 'Lon', attr: 'size="30"' } },
             { name: 'smallimg', type: 'text',required: true, html: { caption: 'img', attr: 'size="30"' } },
@@ -99,56 +79,38 @@ var config = {
             { name: 'active', type: 'int', required: true, html: { caption: 'active', attr: 'size="10"' } }
 		],
 		actions: {
-      			Upload: function () {
-                        // Some weird ajax call??
-                },
 			New: function () {
 				this.clear();
                                 //w2ui.for
                                 //location.reload(true);
 			},
 			Save: function () {
-                                console.log("Save");
+                console.log("Save");
 				var errors = this.validate();
 				if (errors.length > 0) return;
-				// Achtung 4711
-				if (this.recid == 4711) {
-					w2ui.grid.add($.extend(true, { recid: w2ui.grid.records.length + 1 }, this.record));
-					w2ui.grid.selectNone();
-                                        this.recid = w2ui.grid.records.length;
+				if (this.recid == 0 || this.recid == null) {
+					grid.add(w2utils.extend(this.record, { recid: grid.records.length + 2 }))
+                    grid.selectNone()
+                    this.clear()
 				} else {
-					w2ui.grid.set(this.recid, this.record);
-					w2ui.grid.selectNone();
-				}
-                this.save();
-                               
-                //location.reload(true);
+                    grid.set(this.recid, this.record)
+                    grid.selectNone()
+                    this.clear()
+				} 
+				// this.save()                              
+                // location.reload(true);
 			}
 		}
 	}
 }
 
-$(function () {
-        w2utils.settings.date_format = 'yyyy-mm-dd';
-
-	// initialization
-                
-	$('#layout').w2layout(config.layout);
-        //$().w2grid(config.home_groups);
-    w2ui.layout.content('top',$().w2toolbar(topconfig));
-	w2ui.layout.content('left', $().w2grid(config.grid));
-	w2ui.layout.content('main', $().w2form(config.form));
-        
-        //w2ui.toolbar.on('*', function (event) { 
-        //   console.log('EVENT: '+ event.type + ' TARGET: '+ event.target, event);
-        //});
-        // 
-        //setupMenubar();
-        //w2ui.layout.content('bottom', $().w2form(config.form));
-        //w2ui.layout.content('bottom','#bottom');
-
-});
-
+let layout = new w2layout(config.layout)
+let grid = new w2grid(config.grid)
+let form = new w2form(config.form)
+// initialization
+layout.render('#main')
+layout.html('left', grid)
+layout.html('main', form)
 </script>
 
 
@@ -168,12 +130,7 @@ $(function () {
      </select>
      <div id="info"></div>
 <script type="text/javascript">
-
-
-
-    
-    
- 
+// Placeholder for map javascript
 </script>
 
 

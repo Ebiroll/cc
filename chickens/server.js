@@ -142,20 +142,39 @@ exports.chickensPost = function(request, response)
             }
 
             break;
-        case 'delete-records':
-            var delsel = request.body.selected;
-            console.log("Delete RECORD ,", Number(delsel[0]));
-
-
-            var ok_response = {
-                "status": "sucess"
-//                    "message"   : "Not implemented"
-            };
-            response.write(JSON.stringify(ok_response));
-            console.log(delsel);
-            response.end();
-            break;
-        default:
+                case 'delete-records':
+                    {
+                        console.log("DELETE RECORDS");
+                        async function deleteRecords(request, response) {
+                            // Use connect method to connect to the server
+                            await client.connect();
+                            console.log('Connected successfully to server');
+                            
+                            var delsel = request.body.selected.map(Number); // Assuming this is an array of IDs to delete
+                            console.log("Delete RECORDS:", delsel);
+                
+                            const db = client.db(dbName);
+                            const collection = db.collection('chickens');
+                
+                            // Assuming '_id' is used to identify documents to be deleted
+                            const deleteResult = await collection.deleteMany({
+                                _id: { $in: delsel }
+                            });
+                
+                            var ok_response = {
+                                "status": "success",
+                                "deletedCount": deleteResult.deletedCount // Number of documents deleted
+                            };
+                
+                            response.write(JSON.stringify(ok_response));
+                            console.log(`Documents deleted: ${deleteResult.deletedCount}`);
+                            response.end("\r\n");
+                        }
+                
+                        deleteRecords(request, response).catch(console.error);
+                    }
+                    break;
+                    default:
             {
                 response.write(save_response);
                 response.end();

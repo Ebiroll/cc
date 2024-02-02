@@ -80,11 +80,11 @@ function testMe(req,res) {
 app.get('/users/users.html', function(req,res) {
   res.sendfile('users/users.html');
 });
+
 app.use(express.static(__dirname + '/users/users.html'));
 
 
 var fs  = require('fs')
-
 
 app.get('/js/user.js',passport.authenticate('basic', { session: false }),function(req,res) {
  var user = auth(req);
