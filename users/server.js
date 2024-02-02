@@ -195,11 +195,12 @@ exports.usersPost = function(request, response)
     {
         case 'get-records':
             {
-                console.log("Hallelulja");
+                console.log("Hallelulja users");
                 ///var second = JSON.stringify(fake); 
                 //response.write(second);
 
                 mc.connect(dbs, function(err, db) {
+                    console.log("db cc");
                     if (err)
                         throw(err);
                     var collection = db.collection("users", function(err, collection) {
@@ -358,7 +359,7 @@ exports.positionPost = function(request, response)
     {
         case 'get-records':
             {
-                console.log("Hallelulja");
+                console.log("Hallelulja get");
                 ///var second = JSON.stringify(fake); 
                 //response.write(second);
 

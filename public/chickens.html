@@ -109,9 +109,10 @@ var config = {
                                 //location.reload(true);
 			},
 			Save: function () {
+                                console.log("Save");
 				var errors = this.validate();
 				if (errors.length > 0) return;
-				if (this.recid == 0) {
+				if (this.recid == 4711) {
 					w2ui.grid.add($.extend(true, { recid: w2ui.grid.records.length + 1 }, this.record));
 					w2ui.grid.selectNone();
                                         this.recid = w2ui.grid.records.length;
@@ -120,6 +121,7 @@ var config = {
 					w2ui.grid.selectNone();
 				}
                                 this.save();
+                               
                                 //location.reload(true);
 			}
 		}
@@ -130,8 +132,7 @@ $(function () {
         w2utils.settings.date_format = 'yyyy-mm-dd';
 
 	// initialization
-        
-        
+                
 	$('#layout').w2layout(config.layout);
         //$().w2grid(config.home_groups);
         w2ui.layout.content('top',$().w2toolbar(topconfig));
@@ -152,90 +153,28 @@ $(function () {
 
 
 <div id="mapdiv" style="width: 100%; height: 400px;"></div>
-<script src="http://openlayers.org/en/v3.4.0/build/ol.js" type="text/javascript"></script>
+<script type="module" crossorigin src="/assets/index.419ece67.js"></script>
+<link rel="stylesheet" href="/assets/index.b26c6729.css">
+    
+    <div id="map" class="map"  style="width: 100%; height: 400px;">
+      <div id="popup"></div>
+    </div>
+     <select id="layer-select">
+       <option value="Aerial">Aerial</option>
+       <option value="AerialWithLabelsOnDemand" selected>Aerial with labels</option>
+       <option value="RoadOnDemand">Road</option>
+       <option value="CanvasDark">Road dark</option>
+       <option value="OrdnanceSurvey">Ordnance Survey</option>
+     </select>
+     <div id="info"></div>
 <script type="text/javascript">
-    
-var iconFeatures=[];    
-
- var iconFeature = new ol.Feature({
-  geometry: new ol.geom.Point(ol.proj.transform([-81.58123447568494,28.418713713482276], 'EPSG:4326', 'EPSG:3857')),
-  name: 'Disney world'
-});
-
-var iconStyle = new ol.style.Style({
-  image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-    anchor: [0.5, 46],
-    anchorXUnits: 'fraction',
-    anchorYUnits: 'pixels',
-    opacity: 0.75,
-    src: 'http://ol3js.org/en/master/examples/data/icon.png'
-    //src: 'data/icon.png'
-  }))
-});   
-
-iconFeature.setStyle(iconStyle);  
-
-iconFeatures.push(iconFeature);          
-
-var vectorSource = new ol.source.Vector({
-  features: iconFeatures
-});
-
-var vectorLayer = new ol.layer.Vector({
-  source: vectorSource
-});    
 
 
-// Called when user clicks on the map    
-function CenterMap(lat,long,name) {
-    console.log("Long: " + long + " Lat: " + lat);
-    map.getView().setCenter(ol.proj.transform([long, lat], 'EPSG:4326', 'EPSG:3857'));
-    //map.getView().setZoom(5);
-     var iconF = new ol.Feature({
-       geometry: new ol.geom.Point(ol.proj.transform([long,lat], 'EPSG:4326', 'EPSG:3857')),
-       name: name       
-     });
 
-   vectorSource.addFeature(iconF);
-}    
     
     
- var map = new ol.Map({
-        target: 'mapdiv',
-        layers: [
-          new ol.layer.Tile({
-            source: new ol.source.MapQuest({layer: 'osm'})
-          }),vectorLayer],
-        view: new ol.View({ // -81.58123447568494,28.418713713482276
-          center: ol.proj.transform([17.82927,59.42318], 'EPSG:4326', 'EPSG:3857'),
-          zoom: 17
-        })
-      });
-      
-  map.on('click', function(evt) {
-    var lonlat = ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
-    var lon = lonlat[0];
-    var lat = lonlat[1];
-
-    w2ui.form.recid = 0;
-    if (w2ui.form.record._id)
-    {
-        delete w2ui.form.record._id;
-    }
-    w2ui.form.record.name ="click";
-    //console.log("click set name to",newrec.recid);
-    w2ui.form.record.lat=lat;
-    w2ui.form.record.lng=lon;
-    w2ui.form.refresh();
-        
-    
-    //alert(lonlat);
-  });
  
 </script>
-
-
-
 
 
 </body>

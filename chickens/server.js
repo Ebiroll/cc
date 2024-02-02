@@ -72,9 +72,19 @@ exports.chickensPost = function(request, response)
     {
         case 'get-records':
             {
-                console.log("Hallelulja");
+                console.log("Hallelulja chickens");
                 ///var second = JSON.stringify(fake); 
                 //response.write(second);
+                var result_data = {
+                    "status": "sucess",
+                    "total": 0,
+                    "records": {}
+                };
+
+                console.log(result_data);
+
+                response.write(JSON.stringify(result_data));
+                response.end();
 
                 mc.connect(dbs, function(err, db) {
                     if (err)

@@ -1,1 +1,3 @@
 node_modules/*
+bing/node_modules/*
+bing/dist/*

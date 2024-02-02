@@ -1,8 +1,17 @@
 Chicken chase
 ==============
 
+Is now setup to run in codespaces dev container.
+
+
+https://docs.github.com/en/codespaces/overview
+
+==============
 
 INSTALL node & mongodb 
+
+A bit old, but still informational.
+
 https://www.digitalocean.com/community/articles/how-to-install-and-run-a-node-js-app-on-centos-6-4-64bit
 
 http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/
@@ -23,7 +32,6 @@ npm install
 or manually with
 npm install express
 npm install mongodb
-npm install body-parser
 npm install logger
 
 Start with node master.js
@@ -35,12 +43,12 @@ DATABASE
 
 Useful database commands,
 
-database mms
+database cc
 Contains collections
 users
 
 
->mongo
+>mongosh
 >use cc
 >db.users.find()
 >show collections

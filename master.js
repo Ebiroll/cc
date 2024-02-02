@@ -8,17 +8,18 @@
 //w2utils.settings.date_format:
 
 var express = require('express');
-var bodyParser = require('body-parser');
+var app = express();
+app.use(express.urlencoded({extended: true}));
+app.use(express.json()); // To parse the incoming requests with JSON payloads
 var auth = require("basic-auth");
 
+// Old style
 //var app = require('express')()
 //  , server = require('http').createServer(app)
 //  , io = require('socket.io').listen(server);
 
 var port = 10180;
  
-var express = require('express');
-var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 server.listen(process.env.PORT || port);
@@ -31,7 +32,6 @@ var chickens = require('./chickens/server.js');
 
 var userList = [ "admin" , "Ellinor" , "Olle" , "Alex" , "Ludvig" , "Anna" , "Lars" , "Guest" ];
 
-app.use(bodyParser());
 app.use(morgan("dev"));
 
 // Authenticator
@@ -147,14 +147,28 @@ app.set('json spaces', 0);
 
 
 //app.get("/users/users.json", users.getUsers);
-app.post("/users/records.json", users.usersPost);
+app.post("/users/records.json", (req, res)=>{
 
-app.post("/users/positions.json", users.positionPost);
+  //var postData = req.body;
+  //Or if this doesn't work
+  //var postData = JSON.parse(req.body);
+  users.usersPost(req, res);
+});
 
 
-app.post("/chickens/records.json", chickens.chickensPost);
+
+app.post("/users/positions.json",  (req, res)=>{
+  //var postData = req.body;
+  users.positionPost(req, res);
+});
+
+
+app.post("/chickens/records.json", (req, res)=>{
+  chickens.chickensPost(req, res);
+});
 
 
 //app.listen(port);
 //server.listen(port);
+
 console.log('Your server goes on localhost:' + port);

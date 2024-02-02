@@ -5,11 +5,11 @@
     "main": "./master.js",
     "dependencies": {
         "basic-auth": "*",
-        "body-parser": "*",
         "express": "4.x",
         "express-session": "^1.18.0",
         "mongodb": "*",
         "morgan": "*",
+        "ol": "^8.2.0",
         "passport": "*",
         "passport-http": "*",
         "socket.io": "^4.7.4"
