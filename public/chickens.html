@@ -19,7 +19,7 @@ let config = {
 		padding: 4,
 		panels: [
             { type: 'top',  size: 28 ,  resizable: true, minSize: 28 },
-			{ type: 'left', size: '50%', resizable: true, minSize: 500 },
+			{ type: 'left', size: '50%', resizable: true, minSize: 400 },
 			{ type: 'main', minSize: 500, style: 'overflow: hidden' }            
 		]
 	},
@@ -88,6 +88,7 @@ let config = {
                 console.log("Save");
 				var errors = this.validate();
 				if (errors.length > 0) return;
+                this.save() 
 				if (this.recid == 0 || this.recid == null) {
 					grid.add(w2utils.extend(this.record, { recid: grid.records.length + 2 }))
                     grid.selectNone()
@@ -97,7 +98,7 @@ let config = {
                     grid.selectNone()
                     this.clear()
 				} 
-				// this.save()                              
+				                            
                 // location.reload(true);
 			}
 		}

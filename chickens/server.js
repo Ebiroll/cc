@@ -96,42 +96,46 @@ exports.chickensGet = function(request, response)
 exports.chickensPost = function(request, response)
 {
     //console.log("post",req.);
-    console.log("post chickens body", request.body);
-    console.log("serverGet", request.body.cmd);
+    console.log("post chickens body", request);
+    console.log("serverGet", request.query);
     response.type('json');
 
     response.writeHead(200, {
         'Content-type': 'application/json',
         'Access-Control-Allow-Origin': '*'
     });
+    console.log(request.query.action)
 
-    switch (request.body.cmd)
+    const requestObject = JSON.parse(request.query.request);
+
+    switch (requestObject.action)
     {
-        case 'get-records':
+        case 'get':
             {
                 console.log("Hallelulja chickens");
                 exports.chickensGet(request, response);
             }
             break;
-        case 'save-record':
+        case 'save':
             {
                 console.log("SAVE RECORD");
                 async function save(request, response) {
                     // Use connect method to connect to the server
                     await client.connect();
                     console.log('Connected successfully to server');
-                    console.log("save-record", request.body.record);
+                    console.log("save-record", requestObject.record);
                     const db = client.db(dbName);
                     const collection = db.collection('chickens');
                   
                     // recid: request.body.record["_id"],
-                    var doc = {
-                        _id: Number(request.body.record["_id"]),
-                        ...request.body.record
+                    //  _id: Number(requestObject.record["_id"]),
+                    var doc = {                       
+                        ...requestObject.record
                     };
                 
                     // the following code examples can be pasted here...
                     const insertResult = await collection.insertOne(doc);
+                    console.log('Inserted documents =>', insertResult);
 
                     response.write(JSON.stringify(save_response));
                     response.end("\r\n");
@@ -141,9 +145,9 @@ exports.chickensPost = function(request, response)
             
             }
 
-            break;
-                case 'delete-records':
-                    {
+        break;
+        case 'delete':
+                {
                         console.log("DELETE RECORDS");
                         async function deleteRecords(request, response) {
                             // Use connect method to connect to the server
@@ -173,8 +177,8 @@ exports.chickensPost = function(request, response)
                 
                         deleteRecords(request, response).catch(console.error);
                     }
-                    break;
-                    default:
+                break;
+                default:
             {
                 response.write(save_response);
                 response.end();
