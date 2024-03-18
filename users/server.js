@@ -1,182 +1,284 @@
 
-
 var save_response = {
     "status": "success"
 //          "message"   : "Not implemented yet"
 };
 
+const { MongoClient } = require("mongodb");
 
-var dbs = "mongodb://localhost:27017/cc";
+const  uri  = "mongodb://localhost:27017";
 
+const client = new MongoClient(uri);
+
+// ACHTUNG Todo, remove
 var mc = require('mongodb').MongoClient;
 
-exports.usersAdd= function(username) {
-    mc.connect(dbs, function(err, db) {
-        if (err)
-            throw(err);
-            db.collection("users", function(err, userscoll) {
-               console.log("Add user!!",username);
-               userscoll.find().toArray(function(err, docs) {
-                   //console.log(docs);
-                   var found=false;
-                   for (var ix=0;ix<docs.length;ix++)
-                   {
-                       if (docs[ix].data.name===username)
-                       {
-                           found=true;
-                       }
-                   }
-                   
-                   if (found===false)
-                   {                     
-                        var record = {
-                            _id: username,
-                            name: username,
-                            points: 0
-                        }
-                        var doc = {_id: username,
-                             recid: docs.length+1,
-                             data: record
-                         };
+// Database Name
+const dbName = 'cc';
 
-                        userscoll.save(doc, {w: 1}, function(err, docs) {
-                            
-                        });
-                    }                   
-               });
-           });
-       });
+exports.usersAdd = function( username) {
+    async function main(username) {
+        try {
+            // Use connect method to connect to the server
+            await client.connect();
+            console.log('Connected successfully to the server');
+
+            const db = client.db(dbName);
+            const collection = db.collection('users');
+
+            console.log("Add user:", username);
+
+            // Use findOne to check if the user already exists
+            const userExists = await collection.findOne({ name: username });
+
+            if (!userExists) {
+                var record = {
+                    _id: username,
+                    name: username,
+                    points: 0
+                };
+
+                // Insert the new user since they don't exist
+                await collection.insertOne(record);
+
+                console.log("User added successfully:", username);
+            } else {
+                console.log("User already exists:", username);
+            }
+        } catch (err) {
+            console.error("An error occurred:", err);
+        }
+    }
+
+    main(username).catch(console.error);
 };
 
-exports.servePosition=function servePosition( socket )
-{
-        var array = new Array();
-        
-        mc.connect(dbs, function(err, db) {
-        if (err)
-            return(array);
-            //throw(err);
-        var collection = db.collection("positions", function(err, collection) {
-            console.log("serving positions");
+//
+//finally {
+//    // Ensure that the client will close when you finish/error
+//    await client.close();
+//}
 
-           
-            var cursor = collection.find().sort({ _id : 1},function(err, cursor) {
-                var j = 0;
-                cursor.each(function(err, item) {
-                    if (item) {
-                        //console.log(item);
-                        if (item.data)
-                        {
-                            //console.log("serve",item.data);
-                            //item.data.selected=false;
-                            array.push(item.data);
-                            socket.emit('load:coords', item.data);
-                        }
-                    }
-                    else
-                    {
-                        db.close();
-                        console.log("my array",array);
-                        return(array);
-                    }
-                });
+exports.myUsersAdd= function(username) {
+    async function main(username) {
+        // Use connect method to connect to the server
+        await client.connect();
+        console.log('Connected successfully to get from server');
+        const db = client.db(dbName);
+        const collection = db.collection('users');
+
+        console.log("Add user!!",username);
+        const findResult = await collection.find({}).toArray();
+        console.log('Found documents =>', findResult);
+        // Only add if not found
+        var found=false;
+        for (var ix=0;ix<findResult.length;ix++)
+        {
+            if (findResult[ix].name===username)
+            {
+                found=true;
+            }
+        }
+        if (found===false)
+        {                     
+            var record = {
+                _id: username,
+                name: username,
+                points: 0
+            }
+            var doc = {_id: username,
+                    recid: findResult.length+1,
+                    ...record
+                };
+
+            collection.save(doc, {w: 1}, function(err, docs) {
+                if (err) {
+                    console.log("failed save",username);
+                }
             });
+        }
+    }
+
+    main(username).catch(console.error);
+};
+
+
+exports.servePosition = function servePosition( socket )
+{
+    console.log("servePosition");
+
+    async function main(socket) {
+        // Use connect method to connect to the server
+        await client.connect();
+        console.log('Connected successfully to get from server');
+        const db = client.db(dbName);
+        const collection = db.collection('positions');
+
+        console.log("serving positions");
+      
+        // the following code examples can be pasted here...
+        const findResult = await collection.find({}).toArray();
+        console.log('Found documents =>', findResult);
+
+        // Loop through the results and emit the data to the socket
+        findResult.forEach(function(item) {
+            console.log("found",item);                        
+            if (item) {
+                console.log(item);
+                if (item)
+                {
+                    if (Number(item.active)===1)
+                    {
+                        socket.emit('load:coords', item);
+                        console.log("coords",item);
+                    }
+                    
+                }
+            }
         });
-    });
-    console.log("Async???");
-    return(array);
-}
+
+
+      }
+
+      main(socket).catch(console.error);
+};
+
+
 
 updatePoints=function(thePos)
 {
     console.log("update points", thePos);
-    mc.connect(dbs, function(err, db) {
-        //throw(err);
-        db.collection("users", function(err, users) {
-            users.find({"data.name": thePos.id}).toArray(function(err, docs) {
-                var doc = docs[0];
-                doc.data.points = Number(doc.data.points )+1; 
-                users.save(doc, {w: 1}, function(err, result) {
-                    if (err) {
-                        console.log("failed save", thePos);
-                    }
+    async function main(thePos) {
+        // Use connect method to connect to the server
+        await client.connect();
+        console.log('Connected successfully to get from server');
+        const db = client.db(dbName);
+        const collection = db.collection('users');
+        // the following code examples can be pasted here...
+        const findResult = await collection.find({}).toArray();
+        console.log('Found documents =>', findResult);
 
-                    db.close();
-                });
-            });
+
+        var doc = findResult[0];
+        doc.data.points = Number(doc.data.points )+1; 
+        collection.save(doc, {w: 1}, function(err, result) {
+            if (err) {
+                console.log("failed save", thePos);
+            }
         });
-    })
+    }
     
+    main(thePos).catch(console.error);
 }
-
 
 checkForChickens=function(thePos,socket)
 {
-        console.log("give me chickens",thePos);
-        mc.connect(dbs, function(err, db) {
-            //throw(err);
-            db.collection("chickens", function(err, chickens) {
+    console.log("give me chickens", thePos);
+
+    async function main(thePos,socket) {
+        try {
+            // Assuming client is connected or will handle reconnection if necessary
+            const db = client.db(dbName);
+            const chickens = db.collection("chickens");
+
             console.log("checking chickens");
-            chickens.find().sort({ _id : 1},function(err, cursor) {
-                var j = 0;
-                cursor.each(function(err, item) {
-                    if (item) console.log("found---",item.data.active);                        
-                    if (item) {
-                        if ( Number(item.data.active) === 1) {
-                            //console.log(item);
-                            if ((Math.abs(Number(thePos.coords[0].lat)-Number(item.data.lat))<0.001) &&
-                                (Math.abs(Number(thePos.coords[0].lng)-Number(item.data.lng))<0.001)) {
-                                socket.emit('found:chicken', item.data.smallimg);
-                                console.log("found@@@@@@@@",item.data);
-                                updatePoints(thePos);
-                                item.data.active="0";
 
-                                chickens.save(item, {w: 1}, function(err, docs) {
-                                              if (err) {
-                                                  console.log("failed save",item);
-                                              }                           
-                                          });
-                            }
-                        }
-                                                
-                    }
-                    else
-                    {   
-                        db.close();
-                        // No chickens found :-P
-                    }
-                });
-            });
-        });
-    });
-}
+            // Use find with sort directly and convert to array to handle asynchronously
+            const chickenItems = await chickens.find().sort({_id: 1}).toArray();
 
+            for (const item of chickenItems) {
+                console.log("found---", item);
+                if (item.data && Number(item.data.active) === 1) {
+                    if ((Math.abs(Number(thePos.coords[0].lat) - Number(item.data.lat)) < 0.01) &&
+                        (Math.abs(Number(thePos.coords[0].lng) - Number(item.data.lng)) < 0.01)) {
+                        socket.emit('found:chicken', item.data.smallimg);
+                        console.log("found@@@@@@@@", item.data);
+                        await updatePoints(thePos); // Assuming updatePoints is an async function
+
+                        // Update the item's active status
+                        item.data.active = "0";
+                        await chickens.updateOne({_id: item._id}, {$set: {"data.active": "0"}});
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("An error occurred while checking for chickens:", err);
+        }
+    } 
+    main(thePos,socket).catch(console.error);
+
+};
 
 exports.savePosition=function(thePos,socket)
 {
     console.log("SAVE Positions");
     checkForChickens(thePos,socket)
-    mc.connect(dbs, function(err, db) {
-      if (err)
-          throw(err);
-          var collection = db.collection("positions", function(err, collection) {
 
-          var doc = {
-              _id: thePos.id,
-              recid: 0,
-              data: thePos
-          };
+    async function main(thePos,socket) {
+        try {
+            // Use connect method to connect to the server
+            await client.connect();
+            console.log('Connected successfully to get from server');
+            const db = client.db(dbName);
+            const collection = db.collection('positions');
+        
+            // the following code examples can be pasted here...
+            const findResult = await collection.find({}).toArray();
+            console.log('Found documents =>', findResult);
 
-          collection.save(doc, {w: 1}, function(err, docs) {
-              if (err) {
-                  console.log("failed save",thePos);
-              }
-              
-              db.close();
-          });
-      });
-  });
+            // Prepare the document to be upserted
+            var doc = {
+                $set: {
+                    recid: 0, // This might need to be dynamically set or updated in some way
+                    data: thePos
+                }
+            };
+
+            // Use updateOne with upsert option
+            const updateResult = await collection.updateOne({_id: thePos._id}, doc, {upsert: true});
+            console.log('Upserted document =>', updateResult);
+        }  catch (err) {
+            console.error("An error occurred:", err);
+        }
+    };
+
+    main(thePos).catch(console.error);
 }
+//  finally {
+            // Ensure that the client will close when you finish/error
+//            await client.close();
+//        }
+
+
+
+exports.usersGet = function(request, response)
+{
+    console.log("usersGet");
+
+    async function main(request, response) {
+        // Use connect method to connect to the server
+        await client.connect();
+        console.log('Connected successfully to get from server');
+        const db = client.db(dbName);
+        const collection = db.collection('users');
+      
+        // the following code examples can be pasted here...
+        const findResult = await collection.find({}).toArray();
+        console.log('Found documents =>', findResult);
+
+        var result_data = {
+            "status": "sucess",
+            "total": findResult.length,
+            "records": findResult
+        };
+
+        response.write(JSON.stringify(result_data));
+        response.end();
+      }
+
+      main(request, response).catch(console.error);
+};
+
 
 
 exports.usersPost = function(request, response)
@@ -191,146 +293,96 @@ exports.usersPost = function(request, response)
         'Access-Control-Allow-Origin': '*'
     });
 
+    var active_request = '';
+    if (request.query && request.query.request) {
+        active_request = request.query.request;
+    }
+    
+    let requestObject;
+    // Attempt to parse active_request if it's not an empty string
+    if (active_request) {
+        requestObject = JSON.parse(active_request);
+    } else {
+        // Handle the case where active_request is empty or undefined
+        // For example, by setting requestObject to null, an empty object, or a default value
+        requestObject = {}; // or null, or any other default value appropriate for your situation
+    }
+
+
     switch (request.body.cmd)
     {
         case 'get-records':
             {
                 console.log("Hallelulja users");
-                ///var second = JSON.stringify(fake); 
-                //response.write(second);
-
-                mc.connect(dbs, function(err, db) {
-                    console.log("db cc");
-                    if (err)
-                        throw(err);
-                    var collection = db.collection("users", function(err, collection) {
-                        console.log("find!!");
-
-                        var array = new Array();
-                        var cursor = collection.find().sort({ "data.points" : -1},function(err, cursor) {
-                            var j = 0;
-                            cursor.each(function(err, item) {
-                                if (item) {
-                                    //console.log(item);
-                                    if (item.data)
-                                    {
-                                        //console.log(item.data.record);
-                                        item.data.selected=false;
-                                        array.push(item.data);
-                                        array[j].recid = j+1;
-
-                                        j++;
-
-                                         collection.update(
-                                         { _id :  item._id },
-                                         { $set: { recid : j } },
-                                         { w : 0}
-                                         );
-                                 
-                                        // Remove the selected attribute
-                                        collection.update(
-                                        {_id: item._id},
-                                        {$set: { selected : false}},
-                                        {w: 0}
-                                        );
- 
-                                    }
-                                }
-                                else
-                                {
-                                    var result_data = {
-                                        "status": "sucess",
-                                        "total": array.length,
-                                        "records": array
-                                    };
-
-                                    //response.write(job);         
-                                    console.log(result_data);
-
-                                    response.write(JSON.stringify(result_data));
-                                    response.end();
-
-
-                                }
-                            });
-                        });
-                    });
-                });
-
+                exports.usersGet(request, response);
             }
 
             break;
         case 'save-record':
             {
                 console.log("SAVE RECORD");
-                mc.connect(dbs, function(err, db) {
-                    if (err)
-                        throw(err);
-                    var collection = db.collection("users", function(err, collection) {
+                async function save(request, response) {
+                    // Use connect method to connect to the server
+                    await client.connect();
+                    console.log('Connected successfully to server');
+                    console.log("save-record", requestObject.record);
+                    const db = client.db(dbName);
+                    const collection = db.collection('users');
+                  
+                    // recid: request.body.record["_id"],
+                    //  _id: Number(requestObject.record["_id"]),
+                    var doc = {                       
+                        ...requestObject.record
+                    };
+                
+                    // the following code examples can be pasted here...
+                    const insertResult = await collection.insertOne(doc);
+                    console.log('Inserted documents =>', insertResult);
 
-                        var doc = {_id: Number(request.body.record["_id"]),
-                            recid: request.body.record["recid"],
-                            name: request.body.name,
-                            data: request.body.record
-                        };
-
-                        doc.data.points=Number(doc.data.points);
-                        collection.save(doc, {w: 1}, function(err, docs) {
-                            if (err) {
-                                var err_response = {
-                                    "status": "error",
-                                    "message": err.err
-                                };
-                                response.write(JSON.stringify(err_response));
-                                console.log(err_response);
-                                response.end();
-                            }
-                            else
-                            {
-                                response.write(JSON.stringify(save_response));
-                                response.end("\r\n");
-                            }
-                        });
-
-                    });
-                });
-
+                    response.write(JSON.stringify(save_response));
+                    response.end("\r\n");
+                  }
+            
+                  save(request, response).catch(console.error);
+            
             }
-
             break;
         case 'delete-records':
-            var delsel = request.body.selected;
-            console.log("Delete RECORD ,", Number(delsel[0]));
-            mc.connect(dbs, function(err, db) {
-                if (err)
-                    throw(err);
-                var collection = db.collection("users", function(err, collection) {
-//                    collection.remove({
-//                        "recid" : {"$eq": Number(delsel[0]) }
-//                    }, function(err, removed) {
-//                        db.close();
-//                        console.log(removed);
-//                    });
+            {
+                var delsel = request.body.selected;
+                console.log("Delete RECORD ,", Number(delsel[0]));
 
-                    collection.remove({
-                        recid : Number(delsel[0]) 
-                    }, function(err, removed) {
-                        //db.close();
-                        console.log(removed);
+                console.log("DELETE RECORDS");
+                async function deleteRecords(request, response) {
+                    // Use connect method to connect to the server
+                    await client.connect();
+                    console.log('Connected successfully to server');
+
+                    var delsel = request.body.selected.map(Number); // Assuming this is an array of IDs to delete
+                    console.log("Delete RECORDS:", delsel);
+
+                    const db = client.db(dbName);
+                    const collection = db.collection('users');
+
+                    // Assuming '_id' is used to identify documents to be deleted
+                    const deleteResult = await collection.deleteMany({
+                        _id: { $in: delsel }
                     });
 
+                    var ok_response = {
+                        "status": "success",
+                        "deletedCount": deleteResult.deletedCount // Number of documents deleted
+                    };
 
-                });
-            });
+                    response.write(JSON.stringify(ok_response));
+                    console.log(`Documents deleted: ${deleteResult.deletedCount}`);
+                    response.end("\r\n");
+                }
+
+                deleteRecords(request, response).catch(console.error);
+            }
 
 
-            var ok_response = {
-                "status": "sucess"
-//                    "message"   : "Not implemented"
-            };
-            response.write(JSON.stringify(ok_response));
-            console.log(delsel);
-            response.end();
             break;
         default:
             {

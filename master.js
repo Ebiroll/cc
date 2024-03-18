@@ -48,7 +48,7 @@ app.use(express.static('js'));
         
 passport.use(new BasicStrategy(
   function(username, password, done) {
-      //console.log("AUTH!!!");
+    console.log("AUTH!!!");
       // username.valueOf() === 'olle' &&
       
     users.usersAdd(username);   

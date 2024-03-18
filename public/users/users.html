@@ -33,7 +33,7 @@ var config = {
 			{ type: 'button',  id: 'item1',  caption: 'Item 1', img: 'icon-page', hint: 'Hint for item 1' },
                 ],
 		onClick: function (event) {
-			console.log('Target: '+ event.target, event);
+			console.log('Target: '+ event, event);
 		}
             },
 
@@ -45,8 +45,8 @@ var config = {
 		},
                 multiSelect : false,
 		columns: [  // Must be first and hidden
-//                        { field: 'recid', hidden : true , caption: 'recid', size: '20px' } ,
-                    	{ field: '_id', caption: 'User id', size: '10%', sortable: true, searchable: true },
+            { field: 'recid', hidden : true , caption: 'recid', size: '20px' } ,
+            { field: '_id', caption: 'User id', size: '10%', sortable: true, searchable: true },
 			{ field: 'name', caption: 'Name', size: '30%', sortable: true, searchable: true },
                         { field: 'lastlat', caption: 'lat', size: '10%', sortable: true, searchable: true },
                         { field: 'lastlng', caption: 'lon', size: '10%', sortable: true, searchable: true },
@@ -61,14 +61,14 @@ var config = {
 			event.onComplete = function () {
 				var sel = grid.getSelection();
 				console.log(sel);
-				if (sel.length == 1) {
-					form.recid  = sel[0];
-					form.record = $.extend(true, {}, grid.get(sel[0]));
-                                        form.record.selected=false;
-					form.refresh();
-				} else {
-					form.clear();
-				}
+				//if (sel.length == 1) {
+				//	form.recid  = sel[0];
+				//	form.record = $.extend(true, {}, grid.get(sel[0]));
+                //                        form.record.selected=false;
+				//	form.refresh();
+				//} else {
+				//	form.clear();
+				//}
 			}
 		}
 	},
@@ -77,8 +77,9 @@ var config = {
 		name: 'form',
                 url		: 'records.json',
 		fields: [  // recid needs to be first and can be hidden
+ 		    //{ name: 'recid', hidden : true , caption: 'recid', size: '20px' },
  			{ name: '_id', type: 'text',required: true, html: { caption: 'Id', attr: 'size="30"' } },
-                        { name: 'name', type: 'text', required: true, html: { caption: 'Name', attr: 'size="50" maxlength="100"' } },
+            { name: 'name', type: 'text', required: true, html: { caption: 'Name', attr: 'size="50" maxlength="100"' } },
  			{ name: 'lastlat', type: 'int',required: false, html: { caption: 'last lat', attr: 'size="30"' } },
  			{ name: 'lastlng', type: 'int',required: false, html: { caption: 'last lon', attr: 'size="30"' } },
  			{ name: 'points', type: 'int',required: true, html: { caption: 'points', attr: 'size="30"' } },
@@ -115,7 +116,7 @@ $(function () {
         
         
 	$('#layout').w2layout(config.layout);
-        w2ui.layout.content('top',$().w2toolbar(topconfig));
+    w2ui.layout.content('top',$().w2toolbar(topconfig));
 	w2ui.layout.content('left', $().w2grid(config.grid));
 	w2ui.layout.content('main', $().w2form(config.form));
         
