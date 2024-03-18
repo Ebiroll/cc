@@ -69,9 +69,8 @@ map.on('moveend', function () {
 
 let popover;
 map.on('click', function (event) {
-  console.log('click',event.pixel);
-  console.log('coordinate',event.coordinate);
-
+  //console.log('click',event.pixel);
+  //console.log('coordinate',event.coordinate);
 
   if (popover) {
     popover.dispose();
@@ -85,14 +84,12 @@ map.on('click', function (event) {
   form.record.lng = coordinate[0];
   form.refresh();
 
-
   popup.setPosition([
     coordinate[0] + Math.round(event.coordinate[0] / 360) * 360,
     coordinate[1],
   ]);
 
   
-
   popover = new bootstrap.Popover(element, {
     container: element.parentElement,
     content: formatCoordinate(coordinate),

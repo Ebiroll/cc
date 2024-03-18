@@ -126,8 +126,9 @@ app.get("/about", function(request, response) {
 
 // delete to see more logs from sockets
 // io.set('log level', 2);
+// io.set('log level', 3);
 
-io.sockets.on('connection', function (client) {
+io.on('connection', function (client) {
     
     console.log("connected");
     chickens.serveChickens(client);

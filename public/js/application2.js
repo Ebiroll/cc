@@ -104,43 +104,46 @@ $(function() {
 		userMarker.addTo(map);
 		userMarker.bindPopup('<p>You are there! Your are ' + userId + '</p>').openPopup();
                 
-               socket = io.connect('/');
+		socket = io.connect('/');
 
 
-               socket.on('load:chickens', function(data) {
-                        console.log("got",data);
-                        if (!(data.id in connects)) {
-                           addChicken(data);
-                        }
+		socket.on('load:chickens', function(data) {
+				console.log("got",data);
+				// Check in data is not null
+				if (data!=null) {
+					if (!(data.id in connects)) {
+						addChicken(data);
+					}
 
-                        connects[data.name] = data;
-                        connects[data.name].updated = $.now(); // shothand for (new Date).getTime()
-                });
+					connects[data.name] = data;
+					connects[data.name].updated = $.now(); // shothand for (new Date).getTime()
+				}
+		});
 
 
 
-                socket.on('load:coords', function(data) {
-                        console.log("got",data);
-                        if (!(data.id in connects)) {
-                                addUser(data);
-                        }
+		socket.on('load:coords', function(data) {
+				console.log("got",data);
+				if (!(data.id in connects)) {
+						addUser(data);
+				}
 
-                        connects[data.id] = data;
-                        connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
-                });
+				connects[data.id] = data;
+				connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
+		});
 
-                // $( "#dialog-message" )
-                socket.on('found:chicken', function(data) {
-                   var theChick="chickens/"+data;
-                   console.log("CHICKEN CAPTURE",theChick);
-                   // Set image
-                   $("#found-chicken").attr('src', theChick);
-                   $("#found-chicken").attr('style',"float: left; margin:0 7px 50px 0; width:200px; height:200px;");
-                   $("#ctext").text('Congratulations. :-) You have captured a chicken!');
-                });
+		// $( "#dialog-message" )
+		socket.on('found:chicken', function(data) {
+			var theChick="chickens/"+data;
+			console.log("CHICKEN CAPTURE",theChick);
+			// Set image
+			$("#found-chicken").attr('src', theChick);
+			$("#found-chicken").attr('style',"float: left; margin:0 7px 50px 0; width:200px; height:200px;");
+			$("#ctext").text('Congratulations. :-) You have captured a chicken!');
+		});
 
-                
-                var popup = L.popup();
+		
+		var popup = L.popup();
 
 		function onMapClick(e) {
 			popup

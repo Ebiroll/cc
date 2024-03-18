@@ -18,49 +18,44 @@ const dbName = 'cc';
 
 // var mc = require('mongodb').MongoClient;
 
-
-// Returns all chickens positions
-exports.serveChickens=function serveChickens( socket )
+exports.serveChickens = function serveChickens( socket )
 {
-        var array = new Array();
-        console.log("give me chickens");
-        mc.connect(dbs, function(err, db) {
-        if (err)
-            return(array);
-            //throw(err);
-            db.collection("chickens", function(err, chickens) {
-            console.log("serving chickens");
+    console.log("serveChickens");
 
-           
-            chickens.find().sort({ _id : 1},function(err, cursor) {
-                var j = 0;
-                cursor.each(function(err, item) {
-                    console.log("found",item);                        
-                    if (item) {
-                        //console.log(item);
-                        if (item.data)
-                        {
-                            if (Number(item.data.active)===1)
-                            {
-                                socket.emit('load:chickens', item.data);
-                                console.log("serve",item.data);
-                                //item.data.selected=false;
-                                array.push(item.data);
-                            }
-                            
-                        }
+    async function main(socket) {
+        // Use connect method to connect to the server
+        await client.connect();
+        console.log('Connected successfully to get from server');
+        const db = client.db(dbName);
+        const collection = db.collection('chickens');
+      
+        // the following code examples can be pasted here...
+        const findResult = await collection.find({}).toArray();
+        console.log('Found documents =>', findResult);
+
+        // Loop through the results and emit the data to the socket
+        findResult.forEach(function(item) {
+            console.log("found",item);                        
+            if (item) {
+                console.log(item);
+                if (item)
+                {
+                    if (Number(item.active)===1)
+                    {
+                        socket.emit('load:chickens', item);
+                        console.log("serve",item);
                     }
-                    else
-                    {   
-                        console.log("my array",array);
-                        db.close();
-                        return(array);
-                    }
-                });
-            });
+                    
+                }
+            }
         });
-    });
-}
+
+
+      }
+
+      main(socket).catch(console.error);
+};
+
 
 exports.chickensGet = function(request, response)
 {
