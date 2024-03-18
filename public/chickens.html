@@ -4,23 +4,27 @@
     <title>Chickens</title>
     <link rel="stylesheet" type="text/css" href="css/w2ui-2.0.css" />
     <script type="text/javascript" src="js/w2ui-2.0.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap JS (Include Popper.js for Bootstrap v4 or earlier) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </head>
 
 <body>
 
-<div id="main" style="width: 100%; height: 600px;"></div>
+<div id="main" style="width: 100%; height: 450px;"></div>
 
 <script type="text/javascript">
 // widget configuration
 let config = {
-            // var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
 	layout: {
 		name: 'layout',
 		padding: 4,
 		panels: [
             { type: 'top',  size: 28 ,  resizable: true, minSize: 28 },
 			{ type: 'left', size: '50%', resizable: true, minSize: 400 },
-			{ type: 'main', minSize: 500, style: 'overflow: hidden' }            
+			{ type: 'main', minSize: 400, style: 'overflow: hidden' }            
 		]
 	},
 	grid: { 
@@ -64,25 +68,26 @@ let config = {
 		name: 'form',
         url		: 'chickens/records.json',
 		fields: [  // recid needs to be first and can be hidden
- 			{ name: 'recid', type: 'int',required: true, html: { caption: 'Id', attr: 'size="30"' } },
-            { name: 'name', type: 'text', required: true, html: { caption: 'Name', attr: 'size="50" maxlength="100"' } },
-            { name: 'lname', type: 'text', required: true, html: { caption: 'Long name', attr: 'size="50" maxlength="100"' } },
-            { name: 'description', type: 'textarea', html: { 
-            		caption: 'Long Description', attr: "style='width: 350px; height: 80px; resize: none; white-space:normal;'" 
+ 			{ field: 'recid', type: 'int',required: true, html: { label: 'Id', attr: 'size="30"' } },
+            { field: 'name', type: 'text', required: true, html: { label: 'Name', attr: 'size="50" maxlength="100"' } },
+            { field: 'lname', type: 'text', required: true, html: { label: 'Long name', attr: 'size="50" maxlength="100"' } },
+            { field: 'description', type: 'textarea', html: { 
+            		label: 'Long Description', attr: "style='width: 350px; height: 80px; resize: none; white-space:normal;'" 
                 } 
             },                        
- 			{ name: 'lat', type: 'text',required: true, html: { caption: 'Lat', attr: 'size="30"' } },
- 			{ name: 'lng', type: 'text',required: true, html: { caption: 'Lon', attr: 'size="30"' } },
-            { name: 'smallimg', type: 'text',required: true, html: { caption: 'img', attr: 'size="30"' } },
-            { name: 'eggimg', type: 'text',required: false, html: { caption: 'eggimg', attr: 'size="30"' } },                       
-            // { name: 'bigimg', type: 'upload', required: true, html: { caption: 'Chicken img', attr: 'size="30"' } },
-            { name: 'active', type: 'int', required: true, html: { caption: 'active', attr: 'size="10"' } }
+ 			{ field: 'lat', type: 'text',required: true, html: { label: 'Lat', attr: 'size="30"' } },
+ 			{ field: 'lng', type: 'text',required: true, html: { label: 'Lon', attr: 'size="30"' } },
+            { field: 'smallimg', type: 'text',required: true, html: { label: 'img', attr: 'size="30"' } },
+            { field: 'eggimg', type: 'text',required: false, html: { label: 'eggimg', attr: 'size="30"' } },                       
+            // { name: 'bigimg', type: 'upload', required: true, html: { label: 'Chicken img', attr: 'size="30"' } },
+            { field: 'active', type: 'int', required: true, html: { label: 'active', attr: 'size="10"' } }
 		],
 		actions: {
 			New: function () {
 				this.clear();
                                 //w2ui.for
                                 //location.reload(true);
+                getMap();
 			},
 			Save: function () {
                 console.log("Save");
@@ -108,17 +113,17 @@ let config = {
 let layout = new w2layout(config.layout)
 let grid = new w2grid(config.grid)
 let form = new w2form(config.form)
-// initialization
+    // initialization
 layout.render('#main')
 layout.html('left', grid)
 layout.html('main', form)
 </script>
 
 
-<div id="mapdiv" style="width: 100%; height: 400px;"></div>
+<div id="mapdiv" style="width: 100%; height: 500px;"></div>
 <script type="module" crossorigin src="/assets/index.419ece67.js"></script>
 <link rel="stylesheet" href="/assets/index.b26c6729.css">
-    
+    <div id="info"></div>    
     <div id="map" class="map"  style="width: 100%; height: 400px;">
       <div id="popup"></div>
     </div>
@@ -129,9 +134,12 @@ layout.html('main', form)
        <option value="CanvasDark">Road dark</option>
        <option value="OrdnanceSurvey">Ordnance Survey</option>
      </select>
-     <div id="info"></div>
 <script type="text/javascript">
 // Placeholder for map javascript
+
+
+
+    
 </script>
 
 

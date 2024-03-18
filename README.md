@@ -70,6 +70,13 @@ The file index.html contain links to all important pages
 adduser cc
 passwd cc
 
+# Build bing
+   cd bing
+   replace  key: 'Bing Key Here',
+   npm run build
+   cp dist/assets/index.678987ec.js ../public/assets/index.419ece67.js 
+   cp dist/assets/index.b26c6729.css ../public/assets/index.b26c6729.css 
+
 # DATABASE commands
 
 

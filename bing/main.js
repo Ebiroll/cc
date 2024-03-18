@@ -69,19 +69,29 @@ map.on('moveend', function () {
 
 let popover;
 map.on('click', function (event) {
+  console.log('click',event.pixel);
+  console.log('coordinate',event.coordinate);
+
+
   if (popover) {
     popover.dispose();
     popover = undefined;
   }
-  const feature = map.getFeaturesAtPixel(event.pixel)[0];
-  if (!feature) {
-    return;
-  }
-  const coordinate = feature.getGeometry().getCoordinates();
+
+  const coordinate = event.coordinate;
+  //console.log('222');
+
+  form.record.lat = coordinate[1];
+  form.record.lng = coordinate[0];
+  form.refresh();
+
+
   popup.setPosition([
     coordinate[0] + Math.round(event.coordinate[0] / 360) * 360,
     coordinate[1],
   ]);
+
+  
 
   popover = new bootstrap.Popover(element, {
     container: element.parentElement,
@@ -92,6 +102,7 @@ map.on('click', function (event) {
     sanitize: false,
   });
   popover.show();
+
 });
 
 const select = document.getElementById('layer-select');
