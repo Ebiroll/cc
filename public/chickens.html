@@ -43,7 +43,8 @@ let config = {
                         { field: 'description', text: 'Descr', size: '30%', sortable: false , searchable: true },
                         { field: 'lat', captitexton: 'Lat', size: '20%', sortable: false, searchable: true },
                         { field: 'lng', text: 'Lon', size: '20%', sortable: false, searchable: false },
-                        { field: 'smallimg', text: 'img', size: '10%', sortable: false, searchable: false },                        
+                        { field: 'smallimg', text: 'img', size: '10%', sortable: false, searchable: false },   
+                        { field: 'helpimg', text: 'img', size: '10%', sortable: false, searchable: false },                        
                         { field: 'eggimg', text: 'img', size: '10%', sortable: false, searchable: false },
                         // { field: 'bigimg', text: 'bigImage', size: '10%', sortable: false, searchable: false } ,
                         { field: 'active', text: 'active', size: '10%', sortable: false, searchable: false }                     
@@ -78,7 +79,8 @@ let config = {
  			{ field: 'lat', type: 'text',required: true, html: { label: 'Lat', attr: 'size="30"' } },
  			{ field: 'lng', type: 'text',required: true, html: { label: 'Lon', attr: 'size="30"' } },
             { field: 'smallimg', type: 'text',required: true, html: { label: 'img', attr: 'size="30"' } },
-            { field: 'eggimg', type: 'text',required: false, html: { label: 'eggimg', attr: 'size="30"' } },                       
+            { field: 'helpimg', type: 'list',required: false, options:{ items: ['aghost.png','cghost.png' , 'cking.png' , 'cpunk.png' , 'cviking.png' , 'godzilla.png' , 'haxa.png' , 'kanin2.png' , 'rund.png' , 'tpunk.png' , 'chappy.png' ,'clegs.png' , 'csmall.png' , 'cyoung.png' , 'goth.png' , 'hghost.png' , 'iphone.png' , 'princess.png' , 'santa.png' , 'tupp.png' , 'ccarolin.png' , 'chen.png' , 'cpippi.png' , 'cutepunk.png' , 'egg-legs.png' ,  'gun.png' , 'hippie.png' , 'kanin1.png' , 'punk.png' , 'sunglass.png' ]}  , html: {label: 'helpimg', attr: 'size="30"' } },
+            { field: 'eggimg', type: 'text',required: false,  html: {label: 'eggimg', attr: 'size="30"' } },                       
             // { name: 'bigimg', type: 'upload', required: true, html: { label: 'Chicken img', attr: 'size="30"' } },
             { field: 'active', type: 'int', required: true, html: { label: 'active', attr: 'size="10"' } }
 		],
@@ -113,6 +115,7 @@ let layout = new w2layout(config.layout)
 let grid = new w2grid(config.grid)
 let form = new w2form(config.form)
     // initialization
+
 layout.render('#main')
 layout.html('left', grid)
 layout.html('main', form)
