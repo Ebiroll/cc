@@ -53,11 +53,6 @@ exports.usersAdd = function( username) {
     main(username).catch(console.error);
 };
 
-//
-//finally {
-//    // Ensure that the client will close when you finish/error
-//    await client.close();
-//}
 
 exports.myUsersAdd= function(username) {
     async function main(username) {
@@ -151,21 +146,42 @@ updatePoints=function(thePos)
     async function main(thePos) {
         // Use connect method to connect to the server
         await client.connect();
-        console.log('Connected successfully to get from server');
+        console.log('Connected successfully to update points *****');
         const db = client.db(dbName);
         const collection = db.collection('users');
-        // the following code examples can be pasted here...
         const findResult = await collection.find({}).toArray();
-        console.log('Found documents =>', findResult);
-
-
-        var doc = findResult[0];
-        doc.data.points = Number(doc.data.points )+1; 
-        collection.save(doc, {w: 1}, function(err, result) {
-            if (err) {
-                console.log("failed save", thePos);
+        console.log('Update point found documents =>', findResult);
+        
+        if (findResult.length > 0) {
+            var doc = findResult[0];
+            const filter = { _id: doc._id }; // Assuming _id is the field to match the document
+            const update = { $set: { points: Number(doc.points) + 1 } };
+            const options = { upsert: true }; // Creates a new document if no document matches the filter
+        
+            try {
+                const result = await collection.updateOne(filter, update, options);
+                console.log(result);
+            } catch (err) {
+                console.log("failed update", err);
             }
-        });
+        } else {
+            console.log("No documents found.");
+        }
+
+        //// 
+        //const db = client.db(dbName);
+        //const collection = db.collection('users');
+        //const findResult = await collection.find({}).toArray();
+        //console.log('Update point found documents =>', findResult);
+
+
+        //var doc = findResult[0];
+        //doc.points = Number(doc.points )+1; 
+        //collection.save(doc, {w: 1}, function(err, result) {
+        //    if (err) {
+        //        console.log("failed save", thePos);
+        //    }
+        //});
     }
     
     main(thePos).catch(console.error);
@@ -187,17 +203,17 @@ checkForChickens=function(thePos,socket)
             const chickenItems = await chickens.find().sort({_id: 1}).toArray();
 
             for (const item of chickenItems) {
-                console.log("found---", item);
-                if (item.data && Number(item.data.active) === 1) {
-                    if ((Math.abs(Number(thePos.coords[0].lat) - Number(item.data.lat)) < 0.01) &&
-                        (Math.abs(Number(thePos.coords[0].lng) - Number(item.data.lng)) < 0.01)) {
-                        socket.emit('found:chicken', item.data.smallimg);
-                        console.log("found@@@@@@@@", item.data);
+                //console.log("found---", item);
+                if (item && Number(item.active) === 1) {
+                    if ((Math.abs(Number(thePos.coords[0].lat) - Number(item.lat)) < 0.01) &&
+                        (Math.abs(Number(thePos.coords[0].lng) - Number(item.lng)) < 0.01)) {
+                        socket.emit('found:chicken', item.smallimg);
+                        console.log("found@@@@@@@@", item);
                         await updatePoints(thePos); // Assuming updatePoints is an async function
 
                         // Update the item's active status
-                        item.data.active = "0";
-                        await chickens.updateOne({_id: item._id}, {$set: {"data.active": "0"}});
+                        item.active = "0";
+                        await chickens.updateOne({_id: item._id}, {$set: {"active": "0"}});
                     }
                 }
             }
@@ -427,9 +443,9 @@ exports.positionPost = function(request, response)
                             cursor.each(function(err, item) {
                                 if (item) {
                                     //console.log(item);
-                                    if (item.data)
+                                    if (item)
                                     {
-                                        console.log(item.data.record);
+                                        console.log("users",item);
                                         item.data.selected=false;
                                         var Activ='0';
                                         if (item.active) 

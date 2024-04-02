@@ -51,8 +51,6 @@ http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fed
 
 
 
-
-
 ## INSTALL
 Installing dependancies could be done with package.json
 npm install
@@ -95,3 +93,9 @@ Useful database commands,
    > show collections
 
    > db.users.drop()
+
+
+   # Updated version
+
+   chickens.html is updated to use w2ui-2.0 and has working save and delete.
+   users/user.html still uses older w2ui and interface is not updated completely.

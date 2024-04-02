@@ -30,7 +30,6 @@ var morgan = require('morgan');
 var users = require('./users/server.js');
 var chickens = require('./chickens/server.js');
 
-var userList = [ "admin" , "Ellinor" , "Olle" , "Alex" , "Ludvig" , "Anna" , "Lars" , "Guest" ];
 
 app.use(morgan("dev"));
 
@@ -44,7 +43,6 @@ var BasicStrategy = require('passport-http').BasicStrategy;
 app.use(express.static('js'));
 
 
-//var lastUser=Olle;
         
 passport.use(new BasicStrategy(
   function(username, password, done) {
