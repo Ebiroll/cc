@@ -99,3 +99,14 @@ Useful database commands,
 
    chickens.html is updated to use w2ui-2.0 and has working save and delete.
    users/user.html still uses older w2ui and interface is not updated completely.
+
+   # https
+
+   openssl req -nodes -new -x509 -keyout server.key -out server.cert
+   This command creates a new SSL certificate (server.cert) and a private key (server.key).
+
+
+   # On droplet
+   https://docs.digitalocean.com/support/how-do-i-install-an-ssl-certificate-on-a-droplet/
+
+   https://www.freenom.com/en/index.html?lang=en 

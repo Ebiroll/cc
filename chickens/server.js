@@ -20,22 +20,22 @@ const dbName = 'cc';
 
 exports.serveChickens = function serveChickens( socket )
 {
-    console.log("serveChickens");
+    //console.log("serveChickens");
 
     async function main(socket) {
         // Use connect method to connect to the server
         await client.connect();
-        console.log('Connected successfully to get from server');
+        // console.log('Connected successfully to get from server');
         const db = client.db(dbName);
         const collection = db.collection('chickens');
       
         // the following code examples can be pasted here...
         const findResult = await collection.find({}).toArray();
-        console.log('Found documents =>', findResult);
+        // console.log('Found documents =>', findResult);
 
         // Loop through the results and emit the data to the socket
         findResult.forEach(function(item) {
-            console.log("found",item);                        
+            // console.log("found",item);                        
             if (item) {
                 console.log(item);
                 if (item)
@@ -68,7 +68,7 @@ exports.chickensGet = function(request, response)
       
         // the following code examples can be pasted here...
         const findResult = await collection.find({}).toArray();
-        console.log('Found documents =>', findResult);
+        //console.log('Found documents =>', findResult);
 
         var result_data = {
             "status": "sucess",

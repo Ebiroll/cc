@@ -1,11 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-
-//w2utils.settings.date_format:
 
 var express = require('express');
 var app = express();
@@ -19,11 +11,48 @@ var auth = require("basic-auth");
 //  , io = require('socket.io').listen(server);
 
 var port = 10180;
+
+//var port = 443;
  
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
-server.listen(process.env.PORT || port);
-console.log('Server is running ');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+const socketio = require('socket.io');
+
+
+
+var server;
+var io;
+
+// Check if running in production
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (isProduction) { // 
+    // Production environment - Use HTTPS
+    const certOptions = {
+        key: fs.readFileSync(path.resolve('server.key')),
+        cert: fs.readFileSync(path.resolve('server.cert')),
+        // Include CA chain if necessary
+    };
+    
+    server = https.createServer(certOptions, app);
+} else {
+    // Development or other non-production environment - Use HTTP
+    server = http.createServer(app);
+}
+
+io = socketio(server);
+
+server.listen(process.env.PORT || port, () => {
+    console.log(`Server is running on port ${server.address().port}`);
+});
+
+
+//var server = require('http').createServer(app);
+//var io = require('socket.io')(server);
+//server.listen(process.env.PORT || port);
+//console.log('Server is running ');
 
 
 var morgan = require('morgan');
@@ -41,8 +70,6 @@ var passport = require('passport');
 var BasicStrategy = require('passport-http').BasicStrategy;
 
 app.use(express.static('js'));
-
-
         
 passport.use(new BasicStrategy(
   function(username, password, done) {
@@ -66,23 +93,66 @@ app.use(require('express-session')({
 
 app.use(passport.initialize());
 app.use(passport.session());
-app.use('/',passport.authenticate('basic', { session: false }));
-app.use('/',express.static(__dirname + '/public'));
+
+app.use('/assets',express.static(__dirname + '/public/assets'));
+
+app.get('/js/application2.js', passport.authenticate('basic', { session: false }), (req, res) => {
+  const credentials = auth(req);
+  const username = credentials.name; // Now 'username' will just have the 'name' part
+  console.log("USERNAME===============",username);
+
+
+  fs.readFile('public/js/application2.js', 'utf8', (error, data) => {
+    if (error) {
+      console.error(error);
+      return res.sendStatus(500); // Send 500 Internal Server Error
+    }
+    // Dynamically prepend the username variable to the script
+    const customScript = `var username = "${username}";\n${data}`;
+    res.type('application/javascript').send(customScript);
+  });
+});
+
+
+app.use('/js',express.static(__dirname + '/public/js'));
+
+app.use('/lib',express.static(__dirname + '/public/lib'));
+
+app.use('/img',express.static(__dirname + '/public/img'));
+
+app.use('/css',express.static(__dirname + '/public/css'));
+
+app.use('/fonts',express.static(__dirname + '/public/fonts'));
+
+
+app.use('/index_files',express.static(__dirname + '/public/index_files'));
+
+app.get('/chickens.html', function(req,res) {
+  res.sendFile('chickens.html',{ root: 'public' });
+});
 
 
 function testMe(req,res) {
-  res.sendfile('public/index.html');
+
+  res.sendFile('index.html',{ root: 'public' });
 };
+
+app.get('/result.html', function(req,res) {
+  res.sendFile('result.html',{ root: 'public' });
+});
+
+
+app.get('/lmap.html', function(req,res) {
+  res.sendFile('lmap.html',{ root: 'public' });
+});
 
 
 app.get('/users/users.html', function(req,res) {
-  res.sendfile('users/users.html');
+  res.sendFile('users/users.html',{ root: 'public' });
 });
 
-app.use(express.static(__dirname + '/users/users.html'));
+// app.use(express.static(__dirname + '/users/users.html'));
 
-
-var fs  = require('fs')
 
 app.get('/js/user.js',passport.authenticate('basic', { session: false }),function(req,res) {
  var user = auth(req);
@@ -91,36 +161,19 @@ app.get('/js/user.js',passport.authenticate('basic', { session: false }),functio
  res.send(response);
 });
 
-app.get('/js/application2.js',passport.authenticate('basic', { session: false }),function(req,res) {
-  var user = auth(req);
-  var response; //  = 'public/js/application.js';
-  fs.readFile('public/js/application.js','utf-8', function(e,d) {
-      if (e) {
-        console.log(e);
-        res.send(500, 'Something went wrong');
-      }
-      else {
-        console.log("serving custom file",user.name,user.pass);
-        //fs.writeFile('counter.txt',parseInt(d) + 1);
-        response = "var username= \"" + user.name + "\";";
-        response += d;
-        res.send(response);
-      }
-  })  
-  //res.sendfile('public/js/application.js');
-});
 
+app.get('/index.html' , passport.authenticate('basic', { session: false }),testMe);
 
 app.get('/' , passport.authenticate('basic', { session: false }),testMe);
 
+
+// app.use('/',passport.authenticate('basic', { session: false }),testMe);
 
 
 app.get("/about", function(request, response) {
   response.writeHead(200, { "Content-Type": "text/plain" });
   response.end("Welcome to the about page!");
 });
-
-
 
 // delete to see more logs from sockets
 // io.set('log level', 2);
@@ -132,7 +185,7 @@ io.on('connection', function (client) {
     chickens.serveChickens(client);
     
 	  client.on('send:coords', function (data) {
-                //console.log(data);
+                console.log("savePositions",data);
                 users.savePosition(data,client);
                 
                 users.servePosition(client);
@@ -144,14 +197,12 @@ io.on('connection', function (client) {
 // Not necessary??
 app.set('json spaces', 0);
 
-
-//app.get("/users/users.json", users.getUsers);
 app.post("/users/records.json", (req, res)=>{
-
-  //var postData = req.body;
-  //Or if this doesn't work
-  //var postData = JSON.parse(req.body);
   users.usersPost(req, res);
+});
+
+app.get("/users/records.json", (req, res)=>{
+  users.usersGet(req, res);
 });
 
 
@@ -170,6 +221,7 @@ app.get("/chickens/records.json", (req, res)=>{
   chickens.chickensGet(req, res);
 });
 
+//app.use('/chickens',express.static(__dirname + '/public/chickens'));
 
 //app.listen(port);
 //server.listen(port);

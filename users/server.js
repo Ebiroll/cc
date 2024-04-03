@@ -64,7 +64,7 @@ exports.myUsersAdd= function(username) {
 
         console.log("Add user!!",username);
         const findResult = await collection.find({}).toArray();
-        console.log('Found documents =>', findResult);
+        //console.log('Found documents =>', findResult);
         // Only add if not found
         var found=false;
         for (var ix=0;ix<findResult.length;ix++)
@@ -105,7 +105,7 @@ exports.servePosition = function servePosition( socket )
     async function main(socket) {
         // Use connect method to connect to the server
         await client.connect();
-        console.log('Connected successfully to get from server');
+        console.log('Connected successfully to get positions from server');
         const db = client.db(dbName);
         const collection = db.collection('positions');
 
@@ -113,7 +113,7 @@ exports.servePosition = function servePosition( socket )
       
         // the following code examples can be pasted here...
         const findResult = await collection.find({}).toArray();
-        console.log('Found documents =>', findResult);
+        //console.log('Found documents =>', findResult);
 
         // Loop through the results and emit the data to the socket
         findResult.forEach(function(item) {
@@ -122,13 +122,13 @@ exports.servePosition = function servePosition( socket )
                 console.log(item);
                 if (item)
                 {
-                    if (Number(item.active)===1)
-                    {
-                        socket.emit('load:coords', item);
-                        console.log("coords",item);
+                    if (item.data && item.data.coords.length > 0) {
+                        socket.emit('load:coords', item.data);
+                        console.log("coords",item.data);
+                    } else {
+                        console.log("No documents found.");
                     }
-                    
-                }
+                }                    
             }
         });
 
@@ -150,7 +150,7 @@ updatePoints=function(thePos)
         const db = client.db(dbName);
         const collection = db.collection('users');
         const findResult = await collection.find({}).toArray();
-        console.log('Update point found documents =>', findResult);
+        // console.log('Update point found documents =>', findResult);
         
         if (findResult.length > 0) {
             var doc = findResult[0];
@@ -167,21 +167,6 @@ updatePoints=function(thePos)
         } else {
             console.log("No documents found.");
         }
-
-        //// 
-        //const db = client.db(dbName);
-        //const collection = db.collection('users');
-        //const findResult = await collection.find({}).toArray();
-        //console.log('Update point found documents =>', findResult);
-
-
-        //var doc = findResult[0];
-        //doc.points = Number(doc.points )+1; 
-        //collection.save(doc, {w: 1}, function(err, result) {
-        //    if (err) {
-        //        console.log("failed save", thePos);
-        //    }
-        //});
     }
     
     main(thePos).catch(console.error);
@@ -240,7 +225,7 @@ exports.savePosition=function(thePos,socket)
         
             // the following code examples can be pasted here...
             const findResult = await collection.find({}).toArray();
-            console.log('Found documents =>', findResult);
+            console.log('Found positions documents =>', findResult);
 
             // Prepare the document to be upserted
             var doc = {
@@ -251,7 +236,7 @@ exports.savePosition=function(thePos,socket)
             };
 
             // Use updateOne with upsert option
-            const updateResult = await collection.updateOne({_id: thePos._id}, doc, {upsert: true});
+            const updateResult = await collection.updateOne({_id: thePos.id}, doc, {upsert: true});
             console.log('Upserted document =>', updateResult);
         }  catch (err) {
             console.error("An error occurred:", err);
@@ -280,7 +265,7 @@ exports.usersGet = function(request, response)
       
         // the following code examples can be pasted here...
         const findResult = await collection.find({}).toArray();
-        console.log('Found documents =>', findResult);
+        //console.log('Found documents =>', findResult);
 
         var result_data = {
             "status": "sucess",

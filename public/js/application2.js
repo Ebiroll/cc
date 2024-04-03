@@ -2,8 +2,8 @@
 var map;
 $(function() {
 	// generate unique user id
-	var userId = Math.random().toString(16).substring(2,15);
-	//var userId =username;
+	//var userId = Math.random().toString(16).substring(2,15);
+	var userId =username;
                 
         //console-log("User",)
         
@@ -123,18 +123,17 @@ $(function() {
 
 
 		socket.on('load:coords', function(data) {
-				console.log("got",data);
+				console.log("got coords",data);
 				if (!(data.id in connects)) {
 						addUser(data);
 				}
-
 				connects[data.id] = data;
 				connects[data.id].updated = $.now(); // shothand for (new Date).getTime()
 		});
 
 		// $( "#dialog-message" )
 		socket.on('found:chicken', function(data) {
-			var theChick="chickens/"+data;
+			var theChick="img/"+data;
 			console.log("CHICKEN CAPTURE",theChick);
 			// Set image
 			$("#found-chicken").attr('src', theChick);
@@ -195,6 +194,9 @@ $(function() {
 			marker.bindPopup('<p>' + data.id + ' is here!</p>');
 			markers[data.id] = marker;
 		}
+		//var marker = L.marker([data.coords[i].lat, data.coords[i].lng], { icon: userIcon }).addTo(map);
+		//marker.bindPopup('<p>' + data.id + ' is here!</p>');
+		//markers[data.id] = marker;
 	}
 
 	function addChicken(data) {
