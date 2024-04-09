@@ -100,16 +100,16 @@ exports.myUsersAdd= function(username) {
 
 exports.servePosition = function servePosition( socket )
 {
-    console.log("servePosition");
+    // console.log("servePosition");
 
     async function main(socket) {
         // Use connect method to connect to the server
         await client.connect();
-        console.log('Connected successfully to get positions from server');
+        // console.log('Connected successfully to get positions from server');
         const db = client.db(dbName);
         const collection = db.collection('positions');
 
-        console.log("serving positions");
+        // console.log("serving positions");
       
         // the following code examples can be pasted here...
         const findResult = await collection.find({}).toArray();
@@ -117,16 +117,16 @@ exports.servePosition = function servePosition( socket )
 
         // Loop through the results and emit the data to the socket
         findResult.forEach(function(item) {
-            console.log("found",item);                        
+            // console.log("found",item);                        
             if (item) {
-                console.log(item);
+                // console.log(item);
                 if (item)
                 {
                     if (item.data && item.data.coords.length > 0) {
                         socket.emit('load:coords', item.data);
-                        console.log("coords",item.data);
+                        // console.log("coords",item.data);
                     } else {
-                        console.log("No documents found.");
+                        // console.log("No documents found.");
                     }
                 }                    
             }
@@ -139,7 +139,7 @@ exports.servePosition = function servePosition( socket )
 };
 
 updatePoints = function(thePos) {
-    console.log("update points", thePos);
+    // console.log("update points", thePos);
     
     async function main(thePos) {
         try {
@@ -166,7 +166,7 @@ updatePoints = function(thePos) {
             console.error(`Error updating points: ${err}`);
         } finally {
             // Ensuring that the client will close when you finish/error
-            await client.close();
+            // await client.close();
         }
     }
 
@@ -177,7 +177,7 @@ updatePoints = function(thePos) {
 
 checkForChickens=function(thePos,socket)
 {
-    console.log("give me chickens", thePos);
+    // console.log("give me chickens", thePos);
 
     async function main(thePos,socket) {
         try {
@@ -185,7 +185,7 @@ checkForChickens=function(thePos,socket)
             const db = client.db(dbName);
             const chickens = db.collection("chickens");
 
-            console.log("checking chickens");
+            //console.log("checking chickens");
 
             // Use find with sort directly and convert to array to handle asynchronously
             const chickenItems = await chickens.find().sort({_id: 1}).toArray();
@@ -215,14 +215,15 @@ checkForChickens=function(thePos,socket)
 
 exports.savePosition=function(thePos,socket)
 {
-    console.log("SAVE Positions");
+    // TODO! This gets called way to often!!
+    //console.log("SAVE Positions");
     checkForChickens(thePos,socket)
 
     async function main(thePos,socket) {
         try {
             // Use connect method to connect to the server
             await client.connect();
-            console.log('Connected successfully to get from server');
+            //console.log('Connected successfully to get from server');
             const db = client.db(dbName);
             const collection = db.collection('positions');
         
@@ -239,7 +240,7 @@ exports.savePosition=function(thePos,socket)
 
             // Use updateOne with upsert option
             const updateResult = await collection.updateOne({_id: thePos.id}, doc, {upsert: true});
-            console.log('Upserted document =>', updateResult);
+            //console.log('Upserted document =>', updateResult);
         }  catch (err) {
             console.error("An error occurred:", err);
         }

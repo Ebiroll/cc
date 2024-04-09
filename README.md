@@ -94,19 +94,35 @@ Useful database commands,
 
    > db.users.drop()
 
+# Import chickens
+   mongorestore dump
 
-   # Updated version
+
+# Updated version
 
    chickens.html is updated to use w2ui-2.0 and has working save and delete.
    users/user.html still uses older w2ui and interface is not updated completely.
 
-   # https
+# TODO, monitor with process manager
+
+   FROM node:latest
+   WORKDIR /app
+   COPY package.json /app
+   RUN npm install && npm install pm2 -g
+   COPY . /app
+   CMD ["pm2-runtime", "start", "yourApp.js"]
+
+# https
 
    openssl req -nodes -new -x509 -keyout server.key -out server.cert
    This command creates a new SSL certificate (server.cert) and a private key (server.key).
 
 
-   # On droplet
+# On droplet
    https://docs.digitalocean.com/support/how-do-i-install-an-ssl-certificate-on-a-droplet/
 
+   One verification method is http serve of a file.
+    
+
    https://www.freenom.com/en/index.html?lang=en 
+

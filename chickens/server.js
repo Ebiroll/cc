@@ -37,7 +37,7 @@ exports.serveChickens = function serveChickens( socket )
         findResult.forEach(function(item) {
             // console.log("found",item);                        
             if (item) {
-                console.log(item);
+                //console.log(item);
                 if (item)
                 {
                     if (Number(item.active)===1)

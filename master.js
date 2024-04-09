@@ -73,7 +73,7 @@ app.use(express.static('js'));
         
 passport.use(new BasicStrategy(
   function(username, password, done) {
-    console.log("AUTH!!!");
+    //console.log("AUTH!!!");
       // username.valueOf() === 'olle' &&
       
     users.usersAdd(username);   
@@ -185,11 +185,11 @@ app.get("/about", function(request, response) {
 
 io.on('connection', function (client) {
     
-    console.log("connected");
+    //console.log("connected");
     chickens.serveChickens(client);
     
 	  client.on('send:coords', function (data) {
-                console.log("savePositions",data);
+                //console.log("savePositions",data);
                 users.savePosition(data,client);
                 
                 users.servePosition(client);
