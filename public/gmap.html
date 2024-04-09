@@ -115,7 +115,7 @@
     function setChicken(data) {
             if ( data.eggimg )
             {
-                 var path='/chickens/' + data.eggimg;
+                 var path='/img/' + data.eggimg;
                   var image = {
                       url: path,
                       // This marker is 80 pixels wide by 80 pixels tall.
@@ -150,7 +150,7 @@
 
     
         socket.on('found:chicken', function(data) {
-           var theChick="chickens/"+data;
+           var theChick="img/"+data;
            console.log("CHICKEN CAPTURE",theChick);
            // Set image
            $("#found-chicken").attr('src', theChick);

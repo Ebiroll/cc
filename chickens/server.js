@@ -43,7 +43,7 @@ exports.serveChickens = function serveChickens( socket )
                     if (Number(item.active)===1)
                     {
                         socket.emit('load:chickens', item);
-                        console.log("serve",item);
+                        //console.log("serve",item);
                     }                    
                 }
             }
@@ -62,7 +62,7 @@ exports.chickensGet = function(request, response)
     async function main(request, response) {
         // Use connect method to connect to the server
         await client.connect();
-        console.log('Connected successfully to get from server');
+        //console.log('Connected successfully to get from server');
         const db = client.db(dbName);
         const collection = db.collection('chickens');
       
@@ -87,7 +87,7 @@ exports.chickensGet = function(request, response)
 
 exports.chickensPost = function(request, response)
 {
-    console.log("post chickens body", request);
+    //console.log("post chickens body", request);
     //console.log("serverGet", request.query);
     response.type('json');
 

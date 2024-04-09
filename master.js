@@ -146,6 +146,10 @@ app.get('/lmap.html', function(req,res) {
   res.sendFile('lmap.html',{ root: 'public' });
 });
 
+app.get('/gmap.html', function(req,res) {
+    res.sendFile('gmap.html',{ root: 'public' });
+});
+  
 
 app.get('/users/users.html', function(req,res) {
   res.sendFile('users/users.html',{ root: 'public' });
