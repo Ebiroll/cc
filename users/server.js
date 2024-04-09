@@ -138,39 +138,42 @@ exports.servePosition = function servePosition( socket )
       main(socket).catch(console.error);
 };
 
-
-
-updatePoints=function(thePos)
-{
+updatePoints = function(thePos) {
     console.log("update points", thePos);
+    
     async function main(thePos) {
-        // Use connect method to connect to the server
-        await client.connect();
-        console.log('Connected successfully to update points *****');
-        const db = client.db(dbName);
-        const collection = db.collection('users');
-        const findResult = await collection.find({}).toArray();
-        // console.log('Update point found documents =>', findResult);
-        
-        if (findResult.length > 0) {
-            var doc = findResult[0];
-            const filter = { _id: doc._id }; // Assuming _id is the field to match the document
-            const update = { $set: { points: Number(doc.points) + 1 } };
-            const options = { upsert: true }; // Creates a new document if no document matches the filter
-        
-            try {
-                const result = await collection.updateOne(filter, update, options);
-                console.log(result);
-            } catch (err) {
-                console.log("failed update", err);
+        try {
+            // Use connect method to connect to the server
+            await client.connect();
+            console.log('Connected successfully to update points *****');
+            const db = client.db(dbName);
+            const collection = db.collection('users');
+
+            const filter = { _id: thePos.id }; // Filter to match the document with the given _id
+            const update = { $inc: { points: 1 } }; // Increment the points by 1
+            const options = { upsert: false }; // Don't create a new document if it doesn't exist
+
+            // Attempt to update the document
+            const updateResult = await collection.updateOne(filter, update, options);
+
+            // Log the result of the update operation
+            if (updateResult.matchedCount && updateResult.modifiedCount) {
+                console.log(`Successfully updated the document with _id: ${thePos.id}.`);
+            } else {
+                console.log(`Document with _id: ${thePos.id} not found or not updated.`);
             }
-        } else {
-            console.log("No documents found.");
+        } catch (err) {
+            console.error(`Error updating points: ${err}`);
+        } finally {
+            // Ensuring that the client will close when you finish/error
+            await client.close();
         }
     }
-    
+
     main(thePos).catch(console.error);
-}
+};
+
+
 
 checkForChickens=function(thePos,socket)
 {
@@ -223,9 +226,8 @@ exports.savePosition=function(thePos,socket)
             const db = client.db(dbName);
             const collection = db.collection('positions');
         
-            // the following code examples can be pasted here...
             const findResult = await collection.find({}).toArray();
-            console.log('Found positions documents =>', findResult);
+            //console.log('Found positions documents =>', findResult);
 
             // Prepare the document to be upserted
             var doc = {
