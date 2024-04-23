@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Simple Aframe</title>
+    <meta name="description" content="360 Image Example with 3D Model — Networked-Aframe">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
+    <script src="/js/spawn-in-circle.component.js"></script>
+</head>
+<body>
+    <a-scene networked-scene="
+        room: 360;
+        debug: true;
+        adapter: wseasyrtc;
+    ">
+        <a-assets>
+            <a-asset-item id="couch-model" src="/home/couch.glb"></a-asset-item>
+        </a-assets>
+
+        <a-entity id="rig">
+            <a-entity
+                id="player"
+                networked="template:#avatar-template;attachTemplateToLocal:false;"
+                camera
+                position="0 1.6 0"
+                spawn-in-circle="radius:3"
+                wasd-controls
+                look-controls
+            >
+                <!-- Invisible head entity to avoid visual interference -->
+                <a-sphere class="head" visible="false" random-color></a-sphere>
+            </a-entity>
+        </a-entity>
+
+        <a-sky src="/img/living-room.jpg" rotation="0 -130 0"></a-sky>
+
+        <!-- 3D Model couch -->
+        <a-entity gltf-model="#couch-model" position="0 -3 -10" scale="2 2 2"></a-entity>
+
+        <!-- Picture Frame with Image -->
+        <a-box position="2 1.5 -3" rotation="0 45 0" width="2" height="1.5" depth="0.1" material="src: url(/img/chen.png);"></a-box>
+
+        <!-- Picture Frame with Image -->
+        <a-box position="4 1.5 -3" rotation="0 55 0" width="2" height="1.5" depth="0.1" material="src: url(/img/iphone.png);"></a-box>
+
+        <!-- Picture Frame with Image -->
+        <a-box position="8 1.5 -3" rotation="0 0 0" width="2" height="1.5" depth="0.1" material="src: url(/img/cpippi.png);"></a-box>
+
+        <!-- Picture Frame with Image -->
+        <a-box position="12 1.5 -3" rotation="0 0 0" width="2" height="1.5" depth="0.1" material="src: url(/img/princess.png);"></a-box>
+
+        <!-- Picture Frame with Image -->
+        <a-box position="16 1.5 -3" rotation="0 0 0" width="2" height="1.5" depth="0.1" material="src: url(/img/ccarolin.png);"></a-box>
+
+        <!-- Picture Frame with Image -->
+        <a-box position="19 1.5 -3" rotation="0 -45 0" width="2" height="1.5" depth="0.1" material="src: url(/img/punk.png);"></a-box>
+
+
+        <!-- Floor -->
+        <a-plane position="0 -3 0" rotation="-90 0 0" width="80" height="80" material="color: #777;"></a-plane>
+
+    </a-scene>
+</body>
+</html>
