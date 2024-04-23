@@ -10,9 +10,10 @@
         "mongodb": "*",
         "morgan": "*",
         "ol": "^8.2.0",
+        "open-easyrtc": "^2.0.20",
         "passport": "*",
         "passport-http": "*",
-        "socket.io": "^4.7.4"
+        "socket.io": "^2.4.0"
     },
     "author": {
         "name": "Olof Astrand",

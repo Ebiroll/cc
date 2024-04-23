@@ -19,7 +19,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const socketio = require('socket.io');
-
+const easyrtc = require("open-easyrtc");      // EasyRTC external module
 
 
 var server;
@@ -43,6 +43,8 @@ if (isProduction) { //
 }
 
 io = socketio(server);
+// const io = require("socket.io")(webServer);
+
 
 server.listen(process.env.PORT || port, () => {
     console.log(`Server is running on port ${server.address().port}`);
@@ -68,6 +70,21 @@ app.use(morgan("dev"));
 
 var passport = require('passport');
 var BasicStrategy = require('passport-http').BasicStrategy;
+
+
+// Serve the bundle in-memory in development (needs to be before the express.static)
+//if (process.env.NODE_ENV === "development") {
+//  const webpackMiddleware = require("webpack-dev-middleware");
+//  const webpack = require("webpack");
+//  const config = require("webpack.config");
+//
+//  app.use(
+//    webpackMiddleware(webpack(config), {
+//      publicPath: "/dist/"
+//    })
+//  );
+//}
+
 
 app.use(express.static('js'));
         
@@ -115,6 +132,9 @@ app.get('/js/application2.js', passport.authenticate('basic', { session: false }
 
 
 app.use('/js',express.static(__dirname + '/public/js'));
+
+app.use('/home',express.static(__dirname + '/public/home'));
+
 
 app.use('/lib',express.static(__dirname + '/public/lib'));
 
@@ -183,10 +203,100 @@ app.get("/about", function(request, response) {
 // io.set('log level', 2);
 // io.set('log level', 3);
 
+const maxOccupantsInRoom = 10;
+
+const rooms = new Map();
+
 io.on('connection', function (client) {
-    
+    console.log("user connected", client.id);
+
     //console.log("connected");
     chickens.serveChickens(client);
+
+    let curRoom = null;
+
+    client.on("joinRoom", data => {
+      const { room } = data;
+  
+      curRoom = room;
+      let roomInfo = rooms.get(room);
+      if (!roomInfo) {
+        roomInfo = {
+          name: room,
+          occupants: {},
+          occupantsCount: 0
+        };
+        rooms.set(room, roomInfo);
+      }
+  
+      if (roomInfo.occupantsCount >= maxOccupantsInRoom) {
+        // If room is full, search for spot in other instances
+        let availableRoomFound = false;
+        const roomPrefix = `${room}--`;
+        let numberOfInstances = 1;
+        for (const [roomName, roomData] of rooms.entries()) {
+          if (roomName.startsWith(roomPrefix)) {
+            numberOfInstances++;
+            if (roomData.occupantsCount < maxOccupantsInRoom) {
+              availableRoomFound = true;
+              curRoom = roomName;
+              roomInfo = roomData;
+              break;
+            }
+          }
+        }
+  
+        if (!availableRoomFound) {
+          // No available room found, create a new one
+          const newRoomNumber = numberOfInstances + 1;
+          curRoom = `${roomPrefix}${newRoomNumber}`;
+          roomInfo = {
+            name: curRoom,
+            occupants: {},
+            occupantsCount: 0
+          };
+          rooms.set(curRoom, roomInfo)
+        }
+      }
+  
+      const joinedTime = Date.now();
+      roomInfo.occupants[client.id] = joinedTime;
+      roomInfo.occupantsCount++;
+  
+      console.log(`${client.id} joined room ${curRoom}`);
+      socket.join(curRoom);
+  
+      socket.emit("connectSuccess", { joinedTime });
+      const occupants = roomInfo.occupants;
+      io.in(curRoom).emit("occupantsChanged", { occupants });
+    });
+  
+    client.on("send", data => {
+      io.to(data.to).emit("send", data);
+    });
+  
+    client.on("broadcast", data => {
+      socket.to(curRoom).broadcast.emit("broadcast", data);
+    });
+  
+    client.on("disconnect", () => {
+      console.log('disconnected: ', client.id, curRoom);
+      const roomInfo = rooms.get(curRoom);
+      if (roomInfo) {
+        console.log("user disconnected", client.id);
+  
+        delete roomInfo.occupants[client.id];
+        roomInfo.occupantsCount--;
+        const occupants = roomInfo.occupants;
+        socket.to(curRoom).broadcast.emit("occupantsChanged", { occupants });
+  
+        if (roomInfo.occupantsCount === 0) {
+          console.log("everybody left room");
+          rooms.delete(curRoom);
+        }
+      }
+    });
+  
     
 	  client.on('send:coords', function (data) {
                 //console.log("savePositions",data);
@@ -229,5 +339,63 @@ app.get("/chickens/records.json", (req, res)=>{
 
 //app.listen(port);
 //server.listen(port);
+
+
+
+
+
+const myIceServers = [
+  {"urls":"stun:stun1.l.google.com:19302"},
+  {"urls":"stun:stun2.l.google.com:19302"},
+  // {
+  //   "urls":"turn:[ADDRESS]:[PORT]",
+  //   "username":"[USERNAME]",
+  //   "credential":"[CREDENTIAL]"
+  // },
+  // {
+  //   "urls":"turn:[ADDRESS]:[PORT][?transport=tcp]",
+  //   "username":"[USERNAME]",
+  //   "credential":"[CREDENTIAL]"
+  // }
+];
+easyrtc.setOption("appIceServers", myIceServers);
+easyrtc.setOption("logLevel", "debug");
+easyrtc.setOption("demosEnable", false);
+easyrtc.setOption("logColorEnable", true);
+easyrtc.setOption("logObjectDepth", 5);
+
+// Overriding the default easyrtcAuth listener, only so we can directly access its callback
+easyrtc.events.on("easyrtcAuth", (socket, easyrtcid, msg, socketCallback, callback) => {
+    easyrtc.events.defaultListeners.easyrtcAuth(socket, easyrtcid, msg, socketCallback, (err, connectionObj) => {
+        if (err || !msg.msgData || !msg.msgData.credential || !connectionObj) {
+            callback(err, connectionObj);
+            return;
+        }
+
+        connectionObj.setField("credential", msg.msgData.credential, {"isShared":false});
+
+        console.log("["+easyrtcid+"] Credential saved!", connectionObj.getFieldValueSync("credential"));
+
+        callback(err, connectionObj);
+    });
+});
+
+// To test, lets print the credential to the console for every room join!
+easyrtc.events.on("roomJoin", (connectionObj, roomName, roomParameter, callback) => {
+    console.log("["+connectionObj.getEasyrtcid()+"] Credential retrieved!", connectionObj.getFieldValueSync("credential"));
+    easyrtc.events.defaultListeners.roomJoin(connectionObj, roomName, roomParameter, callback);
+});
+
+// Start EasyRTC server
+easyrtc.listen(app, io, null, (err, rtcRef) => {
+    console.log("Initiated");
+
+    rtcRef.events.on("roomCreate", (appObj, creatorConnectionObj, roomName, roomOptions, callback) => {
+        console.log("roomCreate fired! Trying to create: " + roomName);
+
+        appObj.events.defaultListeners.roomCreate(appObj, creatorConnectionObj, roomName, roomOptions, callback);
+    });
+});
+
 
 console.log('Your server goes on localhost:' + port);
