@@ -212,7 +212,7 @@ io.on('connection', function (client) {
 
     //console.log("connected");
     chickens.serveChickens(client);
-
+/* Easy-RTC handles this.
     let curRoom = null;
 
     client.on("joinRoom", data => {
@@ -296,14 +296,30 @@ io.on('connection', function (client) {
         }
       }
     });
+    */
+
+    client.on('chat message', function (msg) {
+      console.log("chat",msg)
+      io.emit('chat message', msg);
+      //if (curRoom) {
+      //    io.to(curRoom).emit('chat message', msg);  // Sends the message to all users in the same room
+      //}
+    });
   
-    
-	  client.on('send:coords', function (data) {
-                //console.log("savePositions",data);
-                users.savePosition(data,client);
-                
-                users.servePosition(client);
-  	});
+    let lastCalled = {};  // Object to track the last time the function was called for each client
+
+    client.on('send:coords', function (data) {
+      const currentTime = Date.now();  // Current timestamp
+      const throttlePeriod = 15000;  // Throttle period in milliseconds
+
+      if (!lastCalled[client.id] || currentTime - lastCalled[client.id] > throttlePeriod) {
+          lastCalled[client.id] = currentTime;  // Update the last called time
+          users.savePosition(data, client);
+          users.servePosition(client);
+      } else {
+          console.log(`Throttled 'send:coords' for client: ${client.id}`);
+      }
+    });
 });
 
 
@@ -358,6 +374,7 @@ const myIceServers = [
   //   "credential":"[CREDENTIAL]"
   // }
 ];
+
 easyrtc.setOption("appIceServers", myIceServers);
 easyrtc.setOption("logLevel", "debug");
 easyrtc.setOption("demosEnable", false);
