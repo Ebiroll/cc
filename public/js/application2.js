@@ -168,7 +168,7 @@ $(function() {
 				}]
 			};
 
-			if ($.now() - emit > 30) {
+			if ($.now() - emit > 60) {
 				socket.emit('send:coords', sentData);
 				emit = $.now();
 			}
@@ -201,20 +201,20 @@ $(function() {
 
 	function addChicken(data) {
 		        console.log("Add chicken", data.name);
-                        
-                        if ( data.eggimg )
-                        {
-                            var path='/chickens/' + data.eggimg;
-                            //console.log("PATH:::::::::::",path);
-                            var markerIcon=new kaninIcon({ iconUrl: path });
-                            var marker = L.marker([data.lat, data.lng], { icon: markerIcon }).addTo(map);
+					
+					if ( data.eggimg )
+					{
+						var path='/assets/' + data.eggimg;
+						//console.log("PATH:::::::::::",path);
+						var markerIcon=new kaninIcon({ iconUrl: path });
+						var marker = L.marker([data.lat, data.lng], { icon: markerIcon }).addTo(map);
 
-                        }
-                        else
-                        {
-                            var marker = L.marker([data.lat, data.lng], { icon: chickenIcon }).addTo(map);
+					}
+					else
+					{
+						var marker = L.marker([data.lat, data.lng], { icon: chickenIcon }).addTo(map);
 
-                        }
+					}
     
 			marker.bindPopup('<p>' + data.name + ' is here!</p>');
 			markers[data.name] = marker;
