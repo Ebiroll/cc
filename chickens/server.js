@@ -14,6 +14,53 @@ const client = new MongoClient(uri);
 // Database Name
 const dbName = 'cc';
 
+export function saveAIChickens(record) {
+    async function save() {
+        // Use connect method to connect to the server
+        await client.connect();
+        console.log('Connected successfully to server');
+        console.log("save-record", record);
+        const db = client.db(dbName);
+        const collection = db.collection('chickens');
+// Add fields if they are missing
+        record.name = record.name || "missing";
+        record.lname = record.lname || "lname";
+        record.description = record.description || "description";
+        record.lat = record.lat || "59.323331";
+        record.lng = record.lng || "18.074221";
+        record.active = record.active || "1";
+        record.smallimg =  "aghost.png";
+    
+        // recid: request.body.record["_id"],
+        //  _id: Number(requestObject.record["_id"]),
+        var doc = {                       
+            ...record,
+            _id: new ObjectId(record._id)
+        };
+
+        try {
+            // Try to update the document first
+            const updateResult = await collection.updateOne(
+              { _id: doc._id }, 
+              { $set: doc },
+              { upsert: true } // Upsert option creates a new document if no document matches the query criteria
+            );
+            
+            console.log('Updated documents =>', updateResult);
+            
+            if (updateResult.matchedCount === 0) {
+              console.log('No existing document found, inserting a new one.');
+            } else {
+              console.log('Document updated successfully.');
+            }
+          } catch (error) {
+            console.error('An error occurred:', error);
+          }
+    }
+
+    save().catch(console.error);
+
+}
 
 
 // var mc = require('mongodb').MongoClient;

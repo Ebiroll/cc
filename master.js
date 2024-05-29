@@ -1,5 +1,3 @@
-
-
 import express, { urlencoded, json } from 'express';
 var app = express();
 app.use(urlencoded({extended: true}));
@@ -7,10 +5,86 @@ app.use(json()); // To parse the incoming requests with JSON payloads
 import auth from "basic-auth";
 import { fileURLToPath } from 'url';
 
-// Old style
-//var app = require('express')()
-//  , server = require('http').createServer(app)
-//  , io = require('socket.io').listen(server);
+import morgan from 'morgan';
+import { usersAdd, savePosition, servePosition, usersPost, usersGet, positionPost } from './users/server.js';
+import {saveAIChickens, serveChickens, chickensPost, chickensGet } from './chickens/server.js';
+
+import OpenAI from 'openai';
+
+
+const openai = new OpenAI({
+  apiKey: 'nvapi-RRGetFromNVidia',
+  baseURL: 'https://integrate.api.nvidia.com/v1',
+})
+
+// Similar to main_test but return result of chat message as a short string max 100 characters
+async function chat_ai(message) {
+  const completion = await openai.chat.completions.create({
+    model: "mistralai/mixtral-8x22b-instruct-v0.1",
+    messages: [{
+      "role": "user",
+      "content": "Reply with maximum 100 characters," + message
+    }],
+    temperature: 0.5,
+    top_p: 1,
+    max_tokens: 1024,
+    stream: true,
+  });
+  
+  let fullResponse = '';
+
+  for await (const chunk of completion) {
+    if (chunk.choices[0]?.delta?.content) {
+      fullResponse += chunk.choices[0].delta.content;
+    }
+  }
+
+  console.log("Full Response:", fullResponse);
+
+  return fullResponse;
+}
+
+
+
+
+async function main_test(lat_lng) {
+  const completion = await openai.chat.completions.create({
+    model: "mistralai/mixtral-8x22b-instruct-v0.1",
+    messages: [{
+      "role": "user",
+      "content": "Can you generate the latlong coordinates as JSON for 5 interesting points near the point" + lat_lng + ". Use 'name' for the name of the location and 'description' for the long description, 'lat' and 'lng' witout nesting. Return no other text. It should be lesser known locations."
+    }],
+    temperature: 0.5,
+    top_p: 1,
+    max_tokens: 1024,
+    stream: true,
+  });
+  
+  let fullResponse = '';
+
+  for await (const chunk of completion) {
+    if (chunk.choices[0]?.delta?.content) {
+      fullResponse += chunk.choices[0].delta.content;
+    }
+  }
+
+  console.log("Full Response:", fullResponse);
+
+  try {
+    const array = JSON.parse(fullResponse);
+    saveAIChickens(array[0]);
+    saveAIChickens(array[1]);
+    saveAIChickens(array[2]);
+    saveAIChickens(array[3]);
+    saveAIChickens(array[4]);
+
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+  }
+}
+
+// Call the function to test
+// main_test("59.3269708858495, 18.071861248378614");
 
 var port = 10180;
 
@@ -61,9 +135,6 @@ server.listen(process.env.PORT || port, () => {
 //console.log('Server is running ');
 
 
-import morgan from 'morgan';
-import { usersAdd, savePosition, servePosition, usersPost, usersGet, positionPost } from './users/server.js';
-import { serveChickens, chickensPost, chickensGet } from './chickens/server.js';
 
 
 app.use(morgan("dev"));
@@ -128,9 +199,16 @@ app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 app.get('/js/application2.js', 
   passport.authenticate('basic', { session: false }),
   (req, res) => {
-    const username = req.user; // The username passed from the authentication
+    const user = req.user; // The username passed from the authentication
 
-    console.log("USERNAME===============", username);
+    console.log("USERNAME===============", user);
+
+    if (!user) {
+      return res.sendStatus(401); // Unauthorized if authentication fails
+  }
+
+  // 2. Extract Username
+  const username = user.username; 
 
     readFile(path.join(__dirname, 'public/js/application2.js'), 'utf8', (error, data) => {
       if (error) {
@@ -306,8 +384,26 @@ io.on('connection', function (client) {
     }
   });
 
-  client.on('chat message', function (msg) {
+  client.on('chat message', async (msg) => { 
     console.log("chat", msg);
+    // If message is add, call main_test() with the rest as a coordinate
+    if (msg === "add") {
+      //rest_of_message = msg.split(" ")[1];
+      main_test("59.3269708858495, 18.071861248378614");
+    }
+    if (msg.startsWith("hello")) {
+      // If message contains space
+      if (msg.indexOf(" ") === -1) {
+        msg= await chat_ai("Hi, how are you?");
+        console.log("chat", msg);
+      } else {
+        const rest_of_message = msg.split(" ").slice(1).join(" ");
+        console.log("ask ", rest_of_message);
+        msg=await chat_ai(rest_of_message);
+      }
+    }
+
+
     io.emit('chat message', msg);
   });
 
