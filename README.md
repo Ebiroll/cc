@@ -8,6 +8,11 @@ https://docs.github.com/en/codespaces/overview
 
 
 
+## Changes
+Removed       "open-easyrtc": "^2.0.20", support
+
+Added "type": "module", to package.json
+
 
 ## INSTALL node & mongodb 
 

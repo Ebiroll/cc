@@ -4,19 +4,19 @@ var save_response = {
 //          "message"   : "Not implemented yet"
 };
 
-const { MongoClient } = require("mongodb");
+import { MongoClient } from "mongodb";
 
 const  uri  = "mongodb://localhost:27017";
 
 const client = new MongoClient(uri);
 
 // ACHTUNG Todo, remove
-var mc = require('mongodb').MongoClient;
+import { MongoClient as mc } from 'mongodb';
 
 // Database Name
 const dbName = 'cc';
 
-exports.usersAdd = function( username) {
+export function usersAdd( username) {
     async function main(username) {
         try {
             // Use connect method to connect to the server
@@ -51,10 +51,10 @@ exports.usersAdd = function( username) {
     }
 
     main(username).catch(console.error);
-};
+}
 
 
-exports.myUsersAdd= function(username) {
+export function myUsersAdd(username) {
     async function main(username) {
         // Use connect method to connect to the server
         await client.connect();
@@ -95,10 +95,10 @@ exports.myUsersAdd= function(username) {
     }
 
     main(username).catch(console.error);
-};
+}
 
 
-exports.servePosition = function servePosition( socket )
+export function servePosition( socket )
 {
     // console.log("servePosition");
 
@@ -136,9 +136,9 @@ exports.servePosition = function servePosition( socket )
       }
 
       main(socket).catch(console.error);
-};
+}
 
-updatePoints = function(thePos) {
+export function updatePoints(thePos) {
     // console.log("update points", thePos);
     
     async function main(thePos) {
@@ -175,7 +175,7 @@ updatePoints = function(thePos) {
 
 
 
-checkForChickens=function(thePos,socket)
+export function checkForChickens(thePos,socket)
 {
     // console.log("give me chickens", thePos);
 
@@ -213,7 +213,7 @@ checkForChickens=function(thePos,socket)
 
 };
 
-exports.savePosition=function(thePos,socket)
+export function savePosition(thePos,socket)
 {
     // TODO! This gets called way to often!!
     //console.log("SAVE Positions");
@@ -255,7 +255,7 @@ exports.savePosition=function(thePos,socket)
 
 
 
-exports.usersGet = function(request, response)
+export function usersGet(request, response)
 {
     console.log("usersGet");
 
@@ -281,11 +281,11 @@ exports.usersGet = function(request, response)
       }
 
       main(request, response).catch(console.error);
-};
+}
 
 
 
-exports.usersPost = function(request, response)
+export function usersPost(request, response)
 {
     //console.log("post",req.);
     console.log("body", request.body);
@@ -318,7 +318,7 @@ exports.usersPost = function(request, response)
         case 'get-records':
             {
                 console.log("Hallelulja users");
-                exports.usersGet(request, response);
+                usersGet(request, response);
             }
 
             break;
@@ -395,11 +395,11 @@ exports.usersPost = function(request, response)
             }
     }
 
-};
+}
 
 
 
-exports.positionPost = function(request, response)
+export function positionPost(request, response)
 {
     //console.log("post",req.);
     console.log("body", request.body);
@@ -588,4 +588,4 @@ exports.positionPost = function(request, response)
             }
     }
 
-};
+}

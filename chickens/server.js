@@ -5,7 +5,7 @@ var save_response = {
 //          "message"   : "Not implemented yet"
 };
 
-const { MongoClient, ObjectId } = require("mongodb");
+import { MongoClient, ObjectId } from "mongodb";
 
 const  uri  = "mongodb://localhost:27017";
 
@@ -18,7 +18,7 @@ const dbName = 'cc';
 
 // var mc = require('mongodb').MongoClient;
 
-exports.serveChickens = function serveChickens( socket )
+export function serveChickens( socket )
 {
     //console.log("serveChickens");
 
@@ -51,10 +51,10 @@ exports.serveChickens = function serveChickens( socket )
       }
 
       main(socket).catch(console.error);
-};
+}
 
 
-exports.chickensGet = function(request, response)
+export function chickensGet(request, response)
 {
     console.log("chickensGet");
 
@@ -81,11 +81,11 @@ exports.chickensGet = function(request, response)
       }
 
       main(request, response).catch(console.error);
-};
+}
 
 
 
-exports.chickensPost = function(request, response)
+export function chickensPost(request, response)
 {
     //console.log("post chickens body", request);
     //console.log("serverGet", request.query);
@@ -104,7 +104,7 @@ exports.chickensPost = function(request, response)
         case 'get':
             {
                 console.log("Hallelulja chickens");
-                exports.chickensGet(request, response);
+                chickensGet(request, response);
             }
             break;
         case 'save':
@@ -194,7 +194,7 @@ exports.chickensPost = function(request, response)
             }
     }
 
-};
+}
 
 
 

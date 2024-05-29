@@ -2,17 +2,20 @@
     "name": "Chicken_chase",
     "description": "Chicken hunting map based game",
     "version": "0.0.1",
-    "main": "./master.js",
+    "type": "module",
+    "scripts": {
+        "start": "node ./master.js"
+    },
     "dependencies": {
         "basic-auth": "*",
         "express": "4.x",
         "express-session": "^1.18.0",
+        "langchain": "^0.2.3",
         "mongodb": "*",
         "morgan": "*",
         "ol": "^8.2.0",
-        "open-easyrtc": "^2.0.20",
         "passport": "*",
-        "passport-http": "*",
+        "passport-http": "^0.3.0",
         "socket.io": "^2.4.0"
     },
     "author": {

@@ -1,9 +1,11 @@
 
-var express = require('express');
+
+import express, { urlencoded, json } from 'express';
 var app = express();
-app.use(express.urlencoded({extended: true}));
-app.use(express.json()); // To parse the incoming requests with JSON payloads
-var auth = require("basic-auth");
+app.use(urlencoded({extended: true}));
+app.use(json()); // To parse the incoming requests with JSON payloads
+import auth from "basic-auth";
+import { fileURLToPath } from 'url';
 
 // Old style
 //var app = require('express')()
@@ -14,13 +16,15 @@ var port = 10180;
 
 //var port = 443;
  
-const http = require('http');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-const socketio = require('socket.io');
-const easyrtc = require("open-easyrtc");      // EasyRTC external module
+import { createServer } from 'http';
+import { createServer as _createServer } from 'https';
+import { readFileSync, readFile } from 'fs';
+import path from 'path';
+import socketio from 'socket.io';
+//const easyrtc = require("open-easyrtc");      // EasyRTC external module
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 var server;
 var io;
@@ -31,15 +35,15 @@ const isProduction = process.env.NODE_ENV === 'production';
 if (isProduction) { // 
     // Production environment - Use HTTPS
     const certOptions = {
-        key: fs.readFileSync(path.resolve('server.key')),
-        cert: fs.readFileSync(path.resolve('server.cert')),
+        key: readFileSync(resolve('server.key')),
+        cert: readFileSync(resolve('server.cert')),
         // Include CA chain if necessary
     };
     
-    server = https.createServer(certOptions, app);
+    server = _createServer(certOptions, app);
 } else {
     // Development or other non-production environment - Use HTTP
-    server = http.createServer(app);
+    server = createServer(app);
 }
 
 io = socketio(server);
@@ -57,9 +61,9 @@ server.listen(process.env.PORT || port, () => {
 //console.log('Server is running ');
 
 
-var morgan = require('morgan');
-var users = require('./users/server.js');
-var chickens = require('./chickens/server.js');
+import morgan from 'morgan';
+import { usersAdd, savePosition, servePosition, usersPost, usersGet, positionPost } from './users/server.js';
+import { serveChickens, chickensPost, chickensGet } from './chickens/server.js';
 
 
 app.use(morgan("dev"));
@@ -68,8 +72,11 @@ app.use(morgan("dev"));
 // http://blog.modulus.io/nodejs-and-express-basic-authentication
 
 
-var passport = require('passport');
-var BasicStrategy = require('passport-http').BasicStrategy;
+//import { use, initialize, session as _session, authenticate } from 'passport';
+import { BasicStrategy } from 'passport-http';
+import passport from 'passport';
+
+const { use, initialize, session, authenticate } = passport; // Destructure directly
 
 
 // Serve the bundle in-memory in development (needs to be before the express.static)
@@ -86,66 +93,64 @@ var BasicStrategy = require('passport-http').BasicStrategy;
 //}
 
 
-app.use(express.static('js'));
+//app.use(static('js'));
+app.use(express.static(path.join(__dirname, 'js')));
         
 passport.use(new BasicStrategy(
-  function(username, password, done) {
-    //console.log("AUTH!!!");
-      // username.valueOf() === 'olle' &&
-      
-    users.usersAdd(username);   
-      
-    if (password.valueOf() === 'pip')
+  (username, password, done) => {
+    // Basic authentication logic
+    if (password === 'pip') {
+      usersAdd(username);   
       return done(null, true);
-    else
+    } else {
       return done(null, false);
+    }
   }
 ));
 
-app.use(require('express-session')({ 
-  secret: 'Enter your secret key',
-  resave: true,
-  saveUninitialized: true
-}));
-
+// Initialize Passport
 app.use(passport.initialize());
-app.use(passport.session());
-
-app.use('/assets',express.static(__dirname + '/public/assets'));
-
-app.get('/js/application2.js', passport.authenticate('basic', { session: false }), (req, res) => {
-  const credentials = auth(req);
-  const username = credentials.name; // Now 'username' will just have the 'name' part
-  console.log("USERNAME===============",username);
 
 
-  fs.readFile('public/js/application2.js', 'utf8', (error, data) => {
-    if (error) {
-      console.error(error);
-      return res.sendStatus(500); // Send 500 Internal Server Error
-    }
-    // Dynamically prepend the username variable to the script
-    const customScript = `var username = "${username}";\n${data}`;
-    res.type('application/javascript').send(customScript);
-  });
-});
+//app.use(require('express-session')({ 
+//  secret: 'Enter your secret key',
+//  resave: true,
+//  saveUninitialized: true
+//}));
 
+//app.use(initialize());
+//app.use(session());
 
-app.use('/js',express.static(__dirname + '/public/js'));
+//app.use('/assets',static(__dirname + '/public/assets'));
+app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 
-app.use('/home',express.static(__dirname + '/public/home'));
+// Authenticated route for serving custom JavaScript
+app.get('/js/application2.js', 
+  passport.authenticate('basic', { session: false }),
+  (req, res) => {
+    const username = req.user; // The username passed from the authentication
 
+    console.log("USERNAME===============", username);
 
-app.use('/lib',express.static(__dirname + '/public/lib'));
+    readFile(path.join(__dirname, 'public/js/application2.js'), 'utf8', (error, data) => {
+      if (error) {
+        console.error(error);
+        return res.sendStatus(500); // Send 500 Internal Server Error
+      }
+      // Dynamically prepend the username variable to the script
+      const customScript = `var username = "${username}";\n${data}`;
+      res.type('application/javascript').send(customScript);
+    });
+  }
+);
 
-app.use('/img',express.static(__dirname + '/public/img'));
-
-app.use('/css',express.static(__dirname + '/public/css'));
-
-app.use('/fonts',express.static(__dirname + '/public/fonts'));
-
-
-app.use('/index_files',express.static(__dirname + '/public/index_files'));
+app.use('/js', express.static(path.join(__dirname, 'public/js')));
+app.use('/home', express.static(path.join(__dirname, 'public/home')));
+app.use('/lib', express.static(path.join(__dirname, 'public/lib')));
+app.use('/img', express.static(path.join(__dirname, 'public/img')));
+app.use('/css', express.static(path.join(__dirname, 'public/css')));
+app.use('/fonts', express.static(path.join(__dirname, 'public/fonts')));
+app.use('/index_files', express.static(path.join(__dirname, 'public/index_files')));
 
 app.get('/chickens.html', function(req,res) {
   res.sendFile('chickens.html',{ root: 'public' });
@@ -178,12 +183,19 @@ app.get('/users/users.html', function(req,res) {
 // app.use(express.static(__dirname + '/users/users.html'));
 
 
-app.get('/js/user.js',passport.authenticate('basic', { session: false }),function(req,res) {
- var user = auth(req);
- var response;
- response = "var username= \"" + user.name + "\";";
- res.send(response);
-});
+// Authenticated route for serving custom JavaScript with username
+app.get('/js/user.js',
+  passport.authenticate('basic', { session: false }),
+  (req, res) => {
+    const username = req.user; // The username passed from the authentication
+
+    console.log("USERNAME===============", username);
+
+    // Dynamically create a JavaScript snippet containing the username
+    const response = `var username= "${username}";`;
+    res.type('application/javascript').send(response);
+  }
+);
 
 
 app.get('/index.html' , passport.authenticate('basic', { session: false }),testMe);
@@ -207,148 +219,140 @@ const maxOccupantsInRoom = 10;
 
 const rooms = new Map();
 
+
 io.on('connection', function (client) {
-    console.log("user connected", client.id);
+  console.log("user connected", client.id);
 
-    //console.log("connected");
-    chickens.serveChickens(client);
-/* Easy-RTC handles this.
-    let curRoom = null;
+  serveChickens(client);
 
-    client.on("joinRoom", data => {
-      const { room } = data;
-  
-      curRoom = room;
-      let roomInfo = rooms.get(room);
-      if (!roomInfo) {
+  let curRoom = null;
+
+  client.on("joinRoom", data => {
+    const { room } = data;
+    curRoom = room;
+    let roomInfo = rooms.get(room);
+    if (!roomInfo) {
+      roomInfo = {
+        name: room,
+        occupants: {},
+        occupantsCount: 0
+      };
+      rooms.set(room, roomInfo);
+    }
+
+    if (roomInfo.occupantsCount >= maxOccupantsInRoom) {
+      let availableRoomFound = false;
+      const roomPrefix = `${room}--`;
+      let numberOfInstances = 1;
+      for (const [roomName, roomData] of rooms.entries()) {
+        if (roomName.startsWith(roomPrefix)) {
+          numberOfInstances++;
+          if (roomData.occupantsCount < maxOccupantsInRoom) {
+            availableRoomFound = true;
+            curRoom = roomName;
+            roomInfo = roomData;
+            break;
+          }
+        }
+      }
+
+      if (!availableRoomFound) {
+        const newRoomNumber = numberOfInstances + 1;
+        curRoom = `${roomPrefix}${newRoomNumber}`;
         roomInfo = {
-          name: room,
+          name: curRoom,
           occupants: {},
           occupantsCount: 0
         };
-        rooms.set(room, roomInfo);
+        rooms.set(curRoom, roomInfo);
       }
-  
-      if (roomInfo.occupantsCount >= maxOccupantsInRoom) {
-        // If room is full, search for spot in other instances
-        let availableRoomFound = false;
-        const roomPrefix = `${room}--`;
-        let numberOfInstances = 1;
-        for (const [roomName, roomData] of rooms.entries()) {
-          if (roomName.startsWith(roomPrefix)) {
-            numberOfInstances++;
-            if (roomData.occupantsCount < maxOccupantsInRoom) {
-              availableRoomFound = true;
-              curRoom = roomName;
-              roomInfo = roomData;
-              break;
-            }
-          }
-        }
-  
-        if (!availableRoomFound) {
-          // No available room found, create a new one
-          const newRoomNumber = numberOfInstances + 1;
-          curRoom = `${roomPrefix}${newRoomNumber}`;
-          roomInfo = {
-            name: curRoom,
-            occupants: {},
-            occupantsCount: 0
-          };
-          rooms.set(curRoom, roomInfo)
-        }
-      }
-  
-      const joinedTime = Date.now();
-      roomInfo.occupants[client.id] = joinedTime;
-      roomInfo.occupantsCount++;
-  
-      console.log(`${client.id} joined room ${curRoom}`);
-      socket.join(curRoom);
-  
-      socket.emit("connectSuccess", { joinedTime });
+    }
+
+    const joinedTime = Date.now();
+    roomInfo.occupants[client.id] = joinedTime;
+    roomInfo.occupantsCount++;
+
+    console.log(`${client.id} joined room ${curRoom}`);
+    client.join(curRoom);
+
+    client.emit("connectSuccess", { joinedTime });
+    const occupants = roomInfo.occupants;
+    io.in(curRoom).emit("occupantsChanged", { occupants });
+  });
+
+  client.on("send", data => {
+    io.to(data.to).emit("send", data);
+  });
+
+  client.on("broadcast", data => {
+    client.to(curRoom).emit("broadcast", data);
+  });
+
+  client.on("disconnect", () => {
+    console.log('disconnected: ', client.id, curRoom);
+    const roomInfo = rooms.get(curRoom);
+    if (roomInfo) {
+      console.log("user disconnected", client.id);
+
+      delete roomInfo.occupants[client.id];
+      roomInfo.occupantsCount--;
       const occupants = roomInfo.occupants;
-      io.in(curRoom).emit("occupantsChanged", { occupants });
-    });
-  
-    client.on("send", data => {
-      io.to(data.to).emit("send", data);
-    });
-  
-    client.on("broadcast", data => {
-      socket.to(curRoom).broadcast.emit("broadcast", data);
-    });
-  
-    client.on("disconnect", () => {
-      console.log('disconnected: ', client.id, curRoom);
-      const roomInfo = rooms.get(curRoom);
-      if (roomInfo) {
-        console.log("user disconnected", client.id);
-  
-        delete roomInfo.occupants[client.id];
-        roomInfo.occupantsCount--;
-        const occupants = roomInfo.occupants;
-        socket.to(curRoom).broadcast.emit("occupantsChanged", { occupants });
-  
-        if (roomInfo.occupantsCount === 0) {
-          console.log("everybody left room");
-          rooms.delete(curRoom);
-        }
+      client.to(curRoom).emit("occupantsChanged", { occupants });
+
+      if (roomInfo.occupantsCount === 0) {
+        console.log("everybody left room");
+        rooms.delete(curRoom);
       }
-    });
-    */
+    }
+  });
 
-    client.on('chat message', function (msg) {
-      console.log("chat",msg)
-      io.emit('chat message', msg);
-      //if (curRoom) {
-      //    io.to(curRoom).emit('chat message', msg);  // Sends the message to all users in the same room
-      //}
-    });
-  
-    let lastCalled = {};  // Object to track the last time the function was called for each client
+  client.on('chat message', function (msg) {
+    console.log("chat", msg);
+    io.emit('chat message', msg);
+  });
 
-    client.on('send:coords', function (data) {
-      const currentTime = Date.now();  // Current timestamp
-      const throttlePeriod = 15000;  // Throttle period in milliseconds
+  let lastCalled = {};  // Object to track the last time the function was called for each client
 
-      if (!lastCalled[client.id] || currentTime - lastCalled[client.id] > throttlePeriod) {
-          lastCalled[client.id] = currentTime;  // Update the last called time
-          users.savePosition(data, client);
-          users.servePosition(client);
-      } else {
-          console.log(`Throttled 'send:coords' for client: ${client.id}`);
-      }
-    });
+  client.on('send:coords', function (data) {
+    const currentTime = Date.now();  // Current timestamp
+    const throttlePeriod = 15000;  // Throttle period in milliseconds
+
+    if (!lastCalled[client.id] || currentTime - lastCalled[client.id] > throttlePeriod) {
+      lastCalled[client.id] = currentTime;  // Update the last called time
+      savePosition(data, client);
+      servePosition(client);
+    } else {
+      console.log(`Throttled 'send:coords' for client: ${client.id}`);
+    }
+  });
 });
-
 
 
 // Not necessary??
 app.set('json spaces', 0);
 
 app.post("/users/records.json", (req, res)=>{
-  users.usersPost(req, res);
+  usersPost(req, res);
 });
 
 app.get("/users/records.json", (req, res)=>{
-  users.usersGet(req, res);
+  usersGet(req, res);
 });
 
 
 
 app.post("/users/positions.json",  (req, res)=>{
   //var postData = req.body;
-  users.positionPost(req, res);
+  positionPost(req, res);
 });
 
 
 app.post("/chickens/records.json", (req, res)=>{
-  chickens.chickensPost(req, res);
+  chickensPost(req, res);
 });
 
 app.get("/chickens/records.json", (req, res)=>{
-  chickens.chickensGet(req, res);
+  chickensGet(req, res);
 });
 
 //app.use('/chickens',express.static(__dirname + '/public/chickens'));
@@ -375,44 +379,44 @@ const myIceServers = [
   // }
 ];
 
-easyrtc.setOption("appIceServers", myIceServers);
-easyrtc.setOption("logLevel", "debug");
-easyrtc.setOption("demosEnable", false);
-easyrtc.setOption("logColorEnable", true);
-easyrtc.setOption("logObjectDepth", 5);
+//easyrtc.setOption("appIceServers", myIceServers);
+//easyrtc.setOption("logLevel", "debug");
+//easyrtc.setOption("demosEnable", false);
+//easyrtc.setOption("logColorEnable", true);
+//easyrtc.setOption("logObjectDepth", 5);
 
 // Overriding the default easyrtcAuth listener, only so we can directly access its callback
-easyrtc.events.on("easyrtcAuth", (socket, easyrtcid, msg, socketCallback, callback) => {
-    easyrtc.events.defaultListeners.easyrtcAuth(socket, easyrtcid, msg, socketCallback, (err, connectionObj) => {
-        if (err || !msg.msgData || !msg.msgData.credential || !connectionObj) {
-            callback(err, connectionObj);
-            return;
-        }
+//easyrtc.events.on("easyrtcAuth", (socket, easyrtcid, msg, socketCallback, callback) => {
+//    easyrtc.events.defaultListeners.easyrtcAuth(socket, easyrtcid, msg, socketCallback, (err, connectionObj) => {
+//        if (err || !msg.msgData || !msg.msgData.credential || !connectionObj) {
+//            callback(err, connectionObj);
+//           return;
+//        }
 
-        connectionObj.setField("credential", msg.msgData.credential, {"isShared":false});
+//        connectionObj.setField("credential", msg.msgData.credential, {"isShared":false});
 
-        console.log("["+easyrtcid+"] Credential saved!", connectionObj.getFieldValueSync("credential"));
+//        console.log("["+easyrtcid+"] Credential saved!", connectionObj.getFieldValueSync("credential"));
 
-        callback(err, connectionObj);
-    });
-});
+//        callback(err, connectionObj);
+//   });
+//});
 
 // To test, lets print the credential to the console for every room join!
-easyrtc.events.on("roomJoin", (connectionObj, roomName, roomParameter, callback) => {
-    console.log("["+connectionObj.getEasyrtcid()+"] Credential retrieved!", connectionObj.getFieldValueSync("credential"));
-    easyrtc.events.defaultListeners.roomJoin(connectionObj, roomName, roomParameter, callback);
-});
+//easyrtc.events.on("roomJoin", (connectionObj, roomName, roomParameter, callback) => {
+//    console.log("["+connectionObj.getEasyrtcid()+"] Credential retrieved!", connectionObj.getFieldValueSync("credential"));
+//    easyrtc.events.defaultListeners.roomJoin(connectionObj, roomName, roomParameter, callback);
+//});
 
 // Start EasyRTC server
-easyrtc.listen(app, io, null, (err, rtcRef) => {
-    console.log("Initiated");
+//easyrtc.listen(app, io, null, (err, rtcRef) => {
+//    console.log("Initiated");
 
-    rtcRef.events.on("roomCreate", (appObj, creatorConnectionObj, roomName, roomOptions, callback) => {
-        console.log("roomCreate fired! Trying to create: " + roomName);
+//    rtcRef.events.on("roomCreate", (appObj, creatorConnectionObj, roomName, roomOptions, callback) => {
+//        console.log("roomCreate fired! Trying to create: " + roomName);
 
-        appObj.events.defaultListeners.roomCreate(appObj, creatorConnectionObj, roomName, roomOptions, callback);
-    });
-});
+//        appObj.events.defaultListeners.roomCreate(appObj, creatorConnectionObj, roomName, roomOptions, callback);
+//    });
+//});
 
 
 console.log('Your server goes on localhost:' + port);
