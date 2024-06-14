@@ -45,8 +45,6 @@ async function chat_ai(message) {
 }
 
 
-
-
 async function main_test(lat_lng) {
   const completion = await openai.chat.completions.create({
     model: "mistralai/mixtral-8x22b-instruct-v0.1",
@@ -96,6 +94,7 @@ import { readFileSync, readFile } from 'fs';
 import path from 'path';
 import socketio from 'socket.io';
 //const easyrtc = require("open-easyrtc");      // EasyRTC external module
+import { resolve, dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -172,7 +171,7 @@ passport.use(new BasicStrategy(
     // Basic authentication logic
     if (password === 'pip') {
       usersAdd(username);   
-      return done(null, true);
+      return done(null, { username: username });
     } else {
       return done(null, false);
     }
