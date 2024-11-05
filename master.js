@@ -243,6 +243,15 @@ app.get('/result.html', function(req,res) {
   res.sendFile('result.html',{ root: 'public' });
 });
 
+app.get('/login.html', function(req,res) {
+  res.sendFile('login.html',{ root: 'public' });
+});
+
+app.get('/users.html', function(req,res) {
+  res.sendFile('users.html',{ root: 'public' });
+});
+
+
 
 app.get('/lmap.html', function(req,res) {
   res.sendFile('lmap.html',{ root: 'public' });

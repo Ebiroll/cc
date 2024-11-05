@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/w2ui@2.0/w2ui-2.0.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #grid {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="w2ui-page page-0">
+        <div class="w2ui-field">
+            <label>Name:</label>
+            <div>
+                <input name="name" type="text" maxlength="100" style="width: 250px"/>
+            </div>
+        </div>
+        <div class="w2ui-field">
+            <label>Phone:</label>
+            <div>
+                <input name="phone" type="text" maxlength="15" style="width: 250px"/>
+            </div>
+        </div>
+        <div class="w2ui-field">
+            <label>Replied:</label>
+            <div>
+                <input name="replied" type="checkbox" style="width: 250px"/>
+            </div>
+        </div>
+        <div class="w2ui-field">
+            <label>Attending:</label>
+            <div>
+                <input name="attending" type="checkbox" style="width: 250px"/>
+            </div>
+        </div>
+        <button onclick="addUser()">Add User</button>
+    </div>
+    <div id="grid" style="width: 100%; height: 400px;"></div>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w2ui@2.0/w2ui-2.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@16.0.2"></script>
+    <script>
+        const client = new Appwrite.Client();
+        client
+            .setEndpoint('https://cloud.appwrite.io/v1')
+            .setProject('672368ef002e0e1d266c');
+
+        const { Databases, ID } = Appwrite;
+
+        const databases = new Appwrite.Databases(client);
+
+        function fetchUsers() {
+            databases.listDocuments('67265626001223abfb90', 'MEMBERS_ID')
+                .then(function (response) {
+                    let records = response.documents.map(function(doc) {
+                        return {
+                            recid: doc.$id,
+                            name: doc.name,
+                            phone: doc.phone,
+                            replied: doc.replied,
+                            attending: doc.attending
+                        };
+                    });
+                    w2ui['grid'].add(records);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
+
+        function addUser() {
+
+            const name = document.querySelector('input[name="name"]').value;
+            const phone = document.querySelector('input[name="phone"]').value;
+            const replied = document.querySelector('input[name="replied"]').checked;
+            const attending = document.querySelector('input[name="attending"]').checked;
+            console.log(ID);
+
+            databases.createDocument('EVENT_TIME_ID', 'MEMBERS_ID', ID.unique(), {
+                data:"mydata",
+                name: name,
+                phone: phone,
+                replied: replied,
+                attending: attending
+            })
+            .then(function (response) {
+                fetchUsers();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        }
+
+        $('#grid').w2grid({
+            name: 'grid',
+            columns: [
+                { field: 'name',     text: 'Name', caption: 'Name', size: '30%' },
+                { field: 'phone',    text: 'Phone', caption: 'Phone Number', size: '30%' },
+                { field: 'replied',  text: 'Replied' ,caption: 'Has Replied', size: '20%' },
+                { field: 'attending',text: 'Attending', caption: 'Coming/Not Coming', size: '20%' }
+            ],
+            records: []
+        });
+
+        fetchUsers();
+    </script>
+</body>
+</html>

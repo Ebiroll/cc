@@ -7,12 +7,14 @@
         "start": "node ./master.js"
     },
     "dependencies": {
+        "appwrite": "^16.0.2",
         "basic-auth": "*",
         "express": "4.x",
         "express-session": "^1.18.0",
         "langchain": "^0.2.3",
         "mongodb": "*",
         "morgan": "*",
+        "node-appwrite": "^14.1.0",
         "ol": "^8.2.0",
         "openai": "^4.47.2",
         "passport": "*",
