@@ -6,7 +6,7 @@
 #endif
 
 #define MAX_BULLETS 32
-#define MAX_BIRDS 10
+#define MAX_BIRDS 15
 #define MAX_LIVES 3
 #define WAVE_PATTERN_LENGTH 9  // Length of the binary pattern {001101011}
 
@@ -45,12 +45,19 @@ int invincibilityFrames = 0;  // Invincibility after being hit
 
 // Formation globals: the entire bird formation will be anchored at (formationX, formationBaseZ)
 float formationX = 0.0f;
-float formationBaseZ = -5.0f;
+float formationBaseZ = -8.0f;
 float formationSpeed = 0.2f;
 int formationDirection = 1;  // 1 = moving right, -1 = moving left
 
 // Wave respawn pattern (binary representation: 001101011)
 int wavePattern[WAVE_PATTERN_LENGTH] = {0, 0, 1, 1, 0, 1, 0, 1, 1};
+
+int waveLayout[3][5] = {
+    {1, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1}
+};
+
+
 int currentWave = 0;
 bool allBirdsDestroyed = false;
 int respawnDelay = 0;
@@ -110,7 +117,7 @@ static void InitBirds(void)
     formationX = 0.0f;
     formationBaseZ = -5.0f;
     int columns = 5;
-    int rows = 2;  // MAX_BIRDS assumed to be 10
+    int rows = 3;  // MAX_BIRDS assumed to be 15
     float spacingX = 4.0f;
     float spacingZ = 2.0f;
     
@@ -132,9 +139,11 @@ static void InitBirds(void)
              birds[i].size = GetRandomValue(10, 15) / 10.0f;  // Normal sized birds
              
          // Set initial position in formation:
+         if (waveLayout[row][col] == 0) birds[i].active = false;
+         
          birds[i].position.x = formationX + birds[i].formationOffset.x;
          birds[i].position.y = 0.0f;
-         birds[i].position.z = formationBaseZ + birds[i].formationOffset.z;
+         birds[i].position.z = formationBaseZ + birds[i].formationOffset.z  - 40;
          birds[i].velocity = (Vector3){0.0f, 0.0f, 0.0f};
          
          // Add unpredictable movement factors
@@ -319,8 +328,8 @@ int main(void)
     LoadGameSounds();
 
     // Adjusted camera so the formation and player are visible
-    camera.position = (Vector3){ 0.0f, 25.0f, 0.0f };
-    camera.target   = (Vector3){ 0.0f, 0.0f, 0.0f };
+    camera.position = (Vector3){ 0.0f, 30.0f, 0.0f };
+    camera.target   = (Vector3){ 0.0f, -2.0f, 0.0f };
     camera.up       = (Vector3){ 0.0f, 0.0f, -1.0f };
     camera.fovy     = 30.0f;
     camera.projection = CAMERA_ORTHOGRAPHIC;

@@ -34,7 +34,7 @@ PROJECT_VERSION       ?= 1.0
 PROJECT_BUILD_PATH    ?= .
 PROJECT_SOURCE_FILES  ?= phoenix.c
 
-RAYLIB_SRC_PATH       ?= /home/olof/workraylib/raylib/src
+RAYLIB_SRC_PATH       ?= /home/olof/work/raylib/src
 RAYLIB_INCLUDE_PATH   ?= $(RAYLIB_SRC_PATH)
 RAYLIB_LIB_PATH       ?= $(RAYLIB_SRC_PATH)
 
@@ -53,7 +53,7 @@ BUILD_WEB_SHELL       ?= minshell.html
 BUILD_WEB_HEAP_SIZE   ?= 128MB
 BUILD_WEB_STACK_SIZE  ?= 1MB
 BUILD_WEB_ASYNCIFY_STACK_SIZE ?= 1048576
-BUILD_WEB_RESOURCES   ?= FALSE
+BUILD_WEB_RESOURCES   ?= TRUE
 BUILD_WEB_RESOURCES_PATH  ?= resources
 
 # Determine PLATFORM_OS in case PLATFORM_DESKTOP selected
@@ -120,7 +120,7 @@ ifeq ($(PLATFORM),PLATFORM_WEB)
     # HTML5 emscripten compiler
     # WARNING: To compile to HTML5, code must be redesigned
     # to use emscripten.h and emscripten_set_main_loop()
-    CC = emcc
+    CC = /home/olof/emsdk/upstream/emscripten/emcc
 endif
 ifeq ($(PLATFORM),PLATFORM_DRM)
     ifeq ($(USE_RPI_CROSS_COMPILER),TRUE)
@@ -315,6 +315,7 @@ OBJS = $(patsubst %.c, %.o, $(PROJECT_SOURCE_FILES))
 # Define processes to execute
 #------------------------------------------------------------------------------------------------
 # Default target entry
+# 	#$(CC) -o $(PROJECT_BUILD_PATH)/$(PROJECT_NAME)$(EXT) $(OBJS) $(CFLAGS) $(INCLUDE_PATHS) $(LDFLAGS) $(LDLIBS) -D$(PLATFORM)
 all:
 	$(MAKE) $(PROJECT_NAME)
 
