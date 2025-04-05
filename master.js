@@ -229,6 +229,10 @@ app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/fonts', express.static(path.join(__dirname, 'public/fonts')));
 app.use('/index_files', express.static(path.join(__dirname, 'public/index_files')));
 
+// Add this line to serve phoenix files
+app.use('/phoenix/src', express.static(path.join(__dirname, 'public/phoenix/src')));
+
+
 app.get('/chickens.html', function(req,res) {
   res.sendFile('chickens.html',{ root: 'public' });
 });
