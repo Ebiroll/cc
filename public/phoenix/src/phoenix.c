@@ -1,3 +1,21 @@
+/* Okay, let's modify the game code to use the provided PNG asset for the player ship instead of the cube-based representation. We'll use the DrawBillboard function to render the texture so it always faces the camera.
+
+Steps:
+
+Save the Asset: Save the provided PNG image as spaceship.png in the same directory as your source code, or in a resources subdirectory if you prefer (adjust the path in the code accordingly).
+
+Declare Texture: Add a global variable to hold the loaded texture.
+
+Load Texture: Load the texture in main() after InitWindow().
+
+Unload Texture: Unload the texture in main() before CloseWindow().
+
+Modify Drawing: In UpdateDrawFrame(), replace the DrawCube calls for the player with a DrawBillboard call using the loaded texture. Adjust the size parameter as needed for visual scale.
+
+Adjust Player Color Logic: When using textures, the tint parameter in drawing functions multiplies the texture's color. To show the original colors, use WHITE as the base tint. For flashing, LIGHTGRAY or another color can still be used.
+
+Here's the modified code:
+*/
 #include "raylib.h"
 #include <math.h>
 
@@ -9,6 +27,10 @@
 #define MAX_BIRDS 15
 #define MAX_LIVES 3
 #define WAVE_PATTERN_LENGTH 9  // Length of the binary pattern {001101011}
+
+// --- Texture for the player ship ---
+Texture2D playerTexture;
+// -----------------------------------
 
 // New Bird structure fields for formation and attack behavior.
 typedef struct Bird {
@@ -52,8 +74,9 @@ int formationDirection = 1;  // 1 = moving right, -1 = moving left
 // Wave respawn pattern (binary representation: 001101011)
 int wavePattern[WAVE_PATTERN_LENGTH] = {0, 0, 1, 1, 0, 1, 0, 1, 1};
 
-int waveLayout[3][5] = {
-    {1, 0, 0, 0, 1},
+// Reduced wave layout for testing (adjust MAX_BIRDS if needed)
+int waveLayout[2][5] = { // Assuming MAX_BIRDS is at least 10
+    {1, 0, 1, 0, 1},
     {1, 1, 1, 1, 1}
 };
 
@@ -86,7 +109,7 @@ float CalculateDistance(Vector3 v1, Vector3 v2)
     float dx = v2.x - v1.x;
     float dy = v2.y - v1.y;
     float dz = v2.z - v1.z;
-    
+
     return sqrtf(dx*dx + dy*dy + dz*dz);
 }
 
@@ -103,88 +126,95 @@ static void SpawnBullet(void)
         {
             bullets[i].active = true;
             bullets[i].radius = 0.5f;
-            // Spawn bullet ahead of the player
-            bullets[i].position = (Vector3){ playerPos.x, 0.0f, playerPos.z - 1.0f };
+            // Spawn bullet slightly ahead of the player sprite's visual center
+            bullets[i].position = (Vector3){ playerPos.x, 0.0f, playerPos.z - 1.5f }; // Adjusted Z offset
             PlaySound(shootSound);
             break;
         }
     }
 }
 
-// Initialize birds into a neat formation (2 rows x 5 columns) with unpredictable movement factors
+// Initialize birds into a formation based on waveLayout
 static void InitBirds(void)
 {
     formationX = 0.0f;
     formationBaseZ = -5.0f;
     int columns = 5;
-    int rows = 3;  // MAX_BIRDS assumed to be 15
+    int rows = sizeof(waveLayout) / sizeof(waveLayout[0]); // Dynamically get rows from layout
     float spacingX = 4.0f;
     float spacingZ = 2.0f;
-    
+
     // Determine wave type based on pattern (0 = normal, 1 = aggressive)
     bool aggressiveWave = wavePattern[currentWave % WAVE_PATTERN_LENGTH];
-    
-    for (int i = 0; i < MAX_BIRDS; i++)
-    {
-         int row = i / columns;
-         int col = i % columns;
-         birds[i].formationOffset = (Vector3){ (col - (columns/2)) * spacingX, 0.0f, row * spacingZ };
-         birds[i].active = true;
-         birds[i].attacking = false;
-         
-         // Size varies by wave type
-         if (aggressiveWave)
-             birds[i].size = GetRandomValue(15, 20) / 10.0f;  // Larger birds for aggressive waves
-         else
-             birds[i].size = GetRandomValue(10, 15) / 10.0f;  // Normal sized birds
-             
-         // Set initial position in formation:
-         if (waveLayout[row][col] == 0) birds[i].active = false;
-         
-         birds[i].position.x = formationX + birds[i].formationOffset.x;
-         birds[i].position.y = 0.0f;
-         birds[i].position.z = formationBaseZ + birds[i].formationOffset.z  - 40;
-         birds[i].velocity = (Vector3){0.0f, 0.0f, 0.0f};
-         
-         // Add unpredictable movement factors
-         birds[i].wobbleFactor = GetRandomValue(50, 150) / 100.0f;  // Random wobble amount between 0.5 and 1.5
-         birds[i].wobbleSpeed = GetRandomValue(100, 300) / 100.0f;  // Random wobble speed between 1.0 and 3.0
 
-         // Bird color based on wave type
-         if (aggressiveWave) {
-             // Aggressive wave uses more red/orange hues
-             int colorChoice = GetRandomValue(0, 2);
-             switch (colorChoice)
-             {
-                 case 0: birds[i].color = RED; break;
-                 case 1: birds[i].color = ORANGE; break;
-                 case 2: birds[i].color = MAROON; break;
+    int birdIndex = 0;
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < columns; c++) {
+             if (birdIndex >= MAX_BIRDS) break; // Stop if we exceed MAX_BIRDS
+
+             if (waveLayout[r][c] == 1) { // Only initialize active birds based on layout
+                 birds[birdIndex].formationOffset = (Vector3){ (c - (columns/2)) * spacingX, 0.0f, r * spacingZ };
+                 birds[birdIndex].active = true;
+                 birds[birdIndex].attacking = false;
+
+                 // Size varies by wave type
+                 if (aggressiveWave)
+                     birds[birdIndex].size = GetRandomValue(15, 20) / 10.0f;  // Larger birds for aggressive waves
+                 else
+                     birds[birdIndex].size = GetRandomValue(10, 15) / 10.0f;  // Normal sized birds
+
+                 // Set initial position in formation (start further back)
+                 birds[birdIndex].position.x = formationX + birds[birdIndex].formationOffset.x;
+                 birds[birdIndex].position.y = 0.0f;
+                 birds[birdIndex].position.z = formationBaseZ + birds[birdIndex].formationOffset.z - 40; // Start further back
+                 birds[birdIndex].velocity = (Vector3){0.0f, 0.0f, 0.0f};
+
+                 // Add unpredictable movement factors
+                 birds[birdIndex].wobbleFactor = GetRandomValue(50, 150) / 100.0f;  // Random wobble amount between 0.5 and 1.5
+                 birds[birdIndex].wobbleSpeed = GetRandomValue(100, 300) / 100.0f;  // Random wobble speed between 1.0 and 3.0
+
+                 // Bird color based on wave type
+                 if (aggressiveWave) {
+                     int colorChoice = GetRandomValue(0, 2);
+                     switch (colorChoice)
+                     {
+                         case 0: birds[birdIndex].color = RED; break;
+                         case 1: birds[birdIndex].color = ORANGE; break;
+                         case 2: birds[birdIndex].color = MAROON; break;
+                     }
+                 } else {
+                     int colorChoice = GetRandomValue(0, 4);
+                     switch (colorChoice)
+                     {
+                         case 0: birds[birdIndex].color = GREEN; break;
+                         case 1: birds[birdIndex].color = BLUE; break;
+                         case 2: birds[birdIndex].color = PURPLE; break;
+                         case 3: birds[birdIndex].color = SKYBLUE; break;
+                         case 4: birds[birdIndex].color = LIME; break;
+                     }
+                 }
+                 birdIndex++;
              }
-         } else {
-             // Normal wave uses varied colors
-             int colorChoice = GetRandomValue(0, 4);
-             switch (colorChoice)
-             {
-                 case 0: birds[i].color = GREEN; break;
-                 case 1: birds[i].color = BLUE; break;
-                 case 2: birds[i].color = PURPLE; break;
-                 case 3: birds[i].color = SKYBLUE; break;
-                 case 4: birds[i].color = LIME; break;
-             }
-         }
+        }
+         if (birdIndex >= MAX_BIRDS) break;
     }
-    
-    
+
+     // Deactivate any remaining birds if waveLayout uses fewer than MAX_BIRDS
+    for (int i = birdIndex; i < MAX_BIRDS; i++) {
+        birds[i].active = false;
+    }
+
+
     // Update wave counter for next wave
     currentWave++;
-    
+
     // Reset respawn flags
     allBirdsDestroyed = false;
     respawnDelay = 0;
 }
 
+
 // Check for collisions between bullets and birds.
-// When a collision is detected, mark both bullet and bird inactive (no respawn).
 static void CheckCollisions(void)
 {
     for (int i = 0; i < MAX_BULLETS; i++)
@@ -195,12 +225,14 @@ static void CheckCollisions(void)
             {
                 if (birds[j].active)
                 {
-                    if (CalculateDistance(bullets[i].position, birds[j].position) < (bullets[i].radius + birds[j].size * 0.7f))
+                    // Adjusted collision check: Use bird size, bullet radius might be less relevant
+                    if (CalculateDistance(bullets[i].position, birds[j].position) < (birds[j].size * 0.8f)) // Hitbox based mainly on bird size
                     {
                         bullets[i].active = false;
                         birds[j].active = false;
                         score++;
                         PlaySound(birdHitSound);
+                        break; // Bullet can only hit one bird
                     }
                 }
             }
@@ -212,24 +244,30 @@ static void CheckCollisions(void)
 static void CheckPlayerBirdCollisions(void)
 {
     if (invincibilityFrames > 0) return;
-    
+
     for (int i = 0; i < MAX_BIRDS; i++)
     {
         if (birds[i].active)
         {
-            float playerSize = 1.0f;  // Approximate collision size
-            if (CalculateDistance(playerPos, birds[i].position) < (playerSize + birds[i].size))
+            // Adjusted player collision size to roughly match the sprite's visual extent
+            float playerCollisionRadius = 1.5f; // Tunable parameter
+            if (CalculateDistance(playerPos, birds[i].position) < (playerCollisionRadius + birds[i].size * 0.7f)) // Combine radii
             {
                 lives--;
                 invincibilityFrames = 120;  // 2 seconds at 60 FPS
                 PlaySound(playerHitSound);
-                
+
+                // Make the bird inactive instead of moving it, consistent with bullet hits
+                birds[i].active = false;
+
                 if (lives <= 0) {
                     gameOver = true;
                     PlaySound(gameOverSound);
                     StopMusicStream(gameMusic);
                 }
-                break;
+                // Don't break here, allow multiple collisions per frame if unlucky,
+                // but invincibility prevents immediate multi-hits.
+                 break; // Break after one hit per frame to avoid instant death
             }
         }
     }
@@ -248,25 +286,31 @@ static void CheckAndRespawnBirds(void)
         }
         return;
     }
-    
-    // Check if all birds are destroyed
+
+    // Check if all *initial* birds are destroyed
     bool anyBirdActive = false;
     for (int i = 0; i < MAX_BIRDS; i++)
     {
-        if (birds[i].active)
-        {
-            anyBirdActive = true;
-            break;
+        // Only consider birds that were initially active in the waveLayout
+        // This prevents checking placeholder inactive birds
+        int r = i / 5; // Assuming 5 columns
+        int c = i % 5;
+        if (r < (sizeof(waveLayout) / sizeof(waveLayout[0])) && waveLayout[r][c] == 1) {
+            if (birds[i].active) {
+                anyBirdActive = true;
+                break;
+            }
         }
     }
-    
-    // If no birds are active, set flag to start respawn delay
+
+    // If no birds *that started active* are left, set flag to start respawn delay
     if (!anyBirdActive)
     {
         allBirdsDestroyed = true;
         respawnDelay = 0;
     }
 }
+
 
 // Reset the game state
 static void ResetGame(void)
@@ -275,47 +319,53 @@ static void ResetGame(void)
     lives = MAX_LIVES;
     gameOver = false;
     playerPos = (Vector3){ 0.0f, 0.0f, 8.0f };
-    currentWave = 0;
+    currentWave = 0; // Reset wave counter fully
     allBirdsDestroyed = false;
     respawnDelay = 0;
-    
+    invincibilityFrames = 0;
+
     for (int i = 0; i < MAX_BULLETS; i++) { bullets[i].active = false; }
-    InitBirds();
-    
-    // Reset music
-    //StopMusicStream(gameMusic);
-    //PlayMusicStream(gameMusic);
+    InitBirds(); // This will now correctly initialize wave 1 (currentWave=0 before increment)
+
+    // Reset and play music if it was loaded
+    if (IsMusicValid(gameMusic)) {
+        StopMusicStream(gameMusic);
+        PlayMusicStream(gameMusic);
+    }
 }
 
 // Load game sounds
 static void LoadGameSounds(void)
 {
-    shootSound = LoadSound("resources/shoot.mp3");       // Replace with actual file path
-    birdHitSound = LoadSound("resources/birdhit.mp3");   // Replace with actual file path
-    playerHitSound = LoadSound("resources/playerhit.mp3"); // Replace with actual file path
-    waveSpawnSound = LoadSound("resources/wave.mp3");     // Replace with actual file path
-    gameOverSound = LoadSound("resources/gameover.mp3");  // Replace with actual file path
-    //gameMusic = LoadMusicStream("resources/gamemusic.mp3"); // Replace with actual file path
-    
-    SetSoundVolume(shootSound, 0.7f);
-    SetSoundVolume(birdHitSound, 0.8f);
-    SetSoundVolume(playerHitSound, 0.9f);
-    SetSoundVolume(waveSpawnSound, 0.8f);
-    SetSoundVolume(gameOverSound, 1.0f);
-    SetMusicVolume(gameMusic, 0.5f);
-    
-    //PlayMusicStream(gameMusic);
+    // Ensure files exist or handle errors
+    if (FileExists("resources/shoot.mp3")) shootSound = LoadSound("resources/shoot.mp3");
+    if (FileExists("resources/birdhit.mp3")) birdHitSound = LoadSound("resources/birdhit.mp3");
+    if (FileExists("resources/playerhit.mp3")) playerHitSound = LoadSound("resources/playerhit.mp3");
+    if (FileExists("resources/wave.mp3")) waveSpawnSound = LoadSound("resources/wave.mp3");
+    if (FileExists("resources/gameover.mp3")) gameOverSound = LoadSound("resources/gameover.mp3");
+    if (FileExists("resources/gamemusic.mp3")) gameMusic = LoadMusicStream("resources/gamemusic.mp3");
+
+    // Set volumes only if sounds/music were loaded
+    if (IsSoundValid(shootSound)) SetSoundVolume(shootSound, 0.7f);
+    if (IsSoundValid(birdHitSound)) SetSoundVolume(birdHitSound, 0.8f);
+    if (IsSoundValid(playerHitSound)) SetSoundVolume(playerHitSound, 0.9f);
+    if (IsSoundValid(waveSpawnSound)) SetSoundVolume(waveSpawnSound, 0.8f);
+    if (IsSoundValid(gameOverSound)) SetSoundVolume(gameOverSound, 1.0f);
+    if (IsMusicValid(gameMusic)) {
+        SetMusicVolume(gameMusic, 0.5f);
+        PlayMusicStream(gameMusic);
+    }
 }
 
 // Unload game sounds
 static void UnloadGameSounds(void)
 {
-    UnloadSound(shootSound);
-    UnloadSound(birdHitSound);
-    UnloadSound(playerHitSound);
-    UnloadSound(waveSpawnSound);
-    UnloadSound(gameOverSound);
-    UnloadMusicStream(gameMusic);
+    if (IsSoundValid(shootSound)) UnloadSound(shootSound);
+    if (IsSoundValid(birdHitSound)) UnloadSound(birdHitSound);
+    if (IsSoundValid(playerHitSound)) UnloadSound(playerHitSound);
+    if (IsSoundValid(waveSpawnSound)) UnloadSound(waveSpawnSound);
+    if (IsSoundValid(gameOverSound)) UnloadSound(gameOverSound);
+    if (IsMusicValid(gameMusic)) UnloadMusicStream(gameMusic);
 }
 
 int main(void)
@@ -325,14 +375,29 @@ int main(void)
 
     InitWindow(screenWidth, screenHeight, "raylib - phoenix bird shooter");
     InitAudioDevice();
+
+    // --- Load Player Texture ---
+    // Make sure spaceship.png is in the same directory or specify path e.g. "resources/spaceship.png"
+    if (FileExists("resources/spaceship.png")) {
+         playerTexture = LoadTexture("resources/spaceship.png");
+    } else {
+         // Handle error - maybe draw a placeholder or exit
+         TraceLog(LOG_WARNING, "Failed to load spaceship.png");
+         // As a fallback, we could create a simple white texture
+         Image fallbackImg = GenImageColor(32, 32, RED);
+         playerTexture = LoadTextureFromImage(fallbackImg);
+         UnloadImage(fallbackImg);
+    }
+    // -------------------------
+
     LoadGameSounds();
 
     // Adjusted camera so the formation and player are visible
-    camera.position = (Vector3){ 0.0f, 30.0f, 0.0f };
-    camera.target   = (Vector3){ 0.0f, -2.0f, 0.0f };
-    camera.up       = (Vector3){ 0.0f, 0.0f, -1.0f };
-    camera.fovy     = 30.0f;
-    camera.projection = CAMERA_ORTHOGRAPHIC;
+    camera.position = (Vector3){ 0.0f, 30.0f, 15.0f }; // Pulled camera back slightly more
+    camera.target   = (Vector3){ 0.0f, 0.0f, 0.0f }; // Target center of action
+    camera.up       = (Vector3){ 0.0f, 1.0f, 0.0f }; // Standard Y-up
+    camera.fovy     = 45.0f;                         // Perspective view often looks better
+    camera.projection = CAMERA_PERSPECTIVE;          // Changed to Perspective
 
     // Initialize bird formation
     InitBirds();
@@ -348,6 +413,10 @@ int main(void)
         UpdateDrawFrame();
     }
 
+    // --- Unload Player Texture ---
+    UnloadTexture(playerTexture);
+    // ---------------------------
+
     UnloadGameSounds();
     CloseAudioDevice();
     CloseWindow();
@@ -357,99 +426,149 @@ int main(void)
 static void UpdateDrawFrame(void)
 {
     // Update music stream
-    UpdateMusicStream(gameMusic);
-    
+    if (IsMusicValid(gameMusic)) UpdateMusicStream(gameMusic);
+
     // --- Input Handling for Player ---
     if (!gameOver)
     {
-        if (IsKeyDown(KEY_LEFT))  playerPos.x -= playerSpeed;
-        if (IsKeyDown(KEY_RIGHT)) playerPos.x += playerSpeed;
-        if (playerPos.x < -playAreaWidth/2) playerPos.x = -playAreaWidth/2;
-        if (playerPos.x > playAreaWidth/2) playerPos.x = playAreaWidth/2;
-        
+        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))  playerPos.x -= playerSpeed;
+        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) playerPos.x += playerSpeed;
+
+        // Constrain player
+        float playerHalfWidth = 1.5f; // Approx half-width based on billboard size used below
+        if (playerPos.x < -playAreaWidth/2 + playerHalfWidth) playerPos.x = -playAreaWidth/2 + playerHalfWidth;
+        if (playerPos.x > playAreaWidth/2 - playerHalfWidth) playerPos.x = playAreaWidth/2 - playerHalfWidth;
+
+        // Mouse/Touch movement (alternative)
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
-            Vector2 pos = GetMousePosition();
-            if (pos.x < GetScreenWidth()/2) playerPos.x -= playerSpeed;
-            else                           playerPos.x += playerSpeed;
+            Vector2 touchPos = GetMousePosition(); // Use mouse pos as proxy for touch
+            // Simple check: left half moves left, right half moves right
+            if (touchPos.x < GetScreenWidth() / 2) playerPos.x -= playerSpeed;
+            else playerPos.x += playerSpeed;
         }
-        
+
+
         if (IsKeyPressed(KEY_SPACE) || IsGestureTap())
         {
             SpawnBullet();
         }
-        
+
         if (invincibilityFrames > 0) invincibilityFrames--;
     }
     else  // Game Over; wait for restart
     {
-        if (IsKeyPressed(KEY_R)) ResetGame();
+        if (IsKeyPressed(KEY_R) || IsGestureTap()) ResetGame(); // Allow tap to restart
     }
-    
+
     // --- Formation & Attack Update for Birds (only if game is not over) ---
     if (!gameOver)
     {
-        // Check and handle bird respawning
-        CheckAndRespawnBirds();
-        
+        // Check and handle bird respawning (only if not already waiting)
+        if (!allBirdsDestroyed) CheckAndRespawnBirds();
+        else {
+             // If waiting, just update delay, respawn happens in CheckAndRespawnBirds
+             respawnDelay++;
+             if (respawnDelay >= RESPAWN_DELAY_FRAMES) {
+                 InitBirds();
+             }
+        }
+
+
         // Update formation horizontal movement.
         formationX += formationSpeed * formationDirection;
-        // Boundaries for formation (assuming formation offsets span about ±8 units)
-        if (formationX - 8 < -playAreaWidth/2) formationDirection = 1;
-        if (formationX + 8 > playAreaWidth/2)  formationDirection = -1;
-        
+        // Boundaries for formation (adjust based on actual formation width)
+        float formationEdgeOffset = 4.0f * (5/2); // spacing * (cols/2) approx
+        if (formationX - formationEdgeOffset < -playAreaWidth/2) {
+            formationX = -playAreaWidth/2 + formationEdgeOffset; // Prevent going past edge
+            formationDirection = 1;
+        }
+        if (formationX + formationEdgeOffset > playAreaWidth/2) {
+            formationX = playAreaWidth/2 - formationEdgeOffset; // Prevent going past edge
+            formationDirection = -1;
+        }
+
         // Determine if this is an aggressive wave based on pattern
-        bool aggressiveWave = wavePattern[(currentWave - 1) % WAVE_PATTERN_LENGTH];
-        
+        bool aggressiveWave = (currentWave > 0) && wavePattern[(currentWave - 1) % WAVE_PATTERN_LENGTH];
+
+
         // For birds still in formation, update their positions relative to the formation anchor.
         for (int i = 0; i < MAX_BIRDS; i++)
         {
             if (birds[i].active && !birds[i].attacking)
             {
-                // Add wobble for unpredictable movement
-                float wobbleX = sinf(GetTime() * birds[i].wobbleSpeed) * birds[i].wobbleFactor;
-                float wobbleZ = cosf(GetTime() * birds[i].wobbleSpeed * 0.7f) * birds[i].wobbleFactor * 0.5f;
-                
-                birds[i].position.x = formationX + birds[i].formationOffset.x + wobbleX;
-                birds[i].position.z = formationBaseZ + birds[i].formationOffset.z + wobbleZ;
+                 // Simple approach towards formation target Z
+                 float targetZ = formationBaseZ + birds[i].formationOffset.z;
+                 if (birds[i].position.z < targetZ) {
+                     birds[i].position.z += 0.2f; // Speed at which birds fly into formation Z
+                     if (birds[i].position.z > targetZ) birds[i].position.z = targetZ; // Clamp
+                 }
+
+                // Add wobble for unpredictable movement once near formation Z
+                if (fabsf(birds[i].position.z - targetZ) < 1.0f) {
+                    float wobbleX = sinf(GetTime() * birds[i].wobbleSpeed) * birds[i].wobbleFactor;
+                    float wobbleZ = cosf(GetTime() * birds[i].wobbleSpeed * 0.7f) * birds[i].wobbleFactor * 0.5f;
+                    birds[i].position.x = formationX + birds[i].formationOffset.x + wobbleX;
+                    birds[i].position.z = targetZ + wobbleZ; // Wobble around target Z
+                } else {
+                    // If still flying in, just update X based on formation center
+                     birds[i].position.x = formationX + birds[i].formationOffset.x;
+                }
             }
         }
-        
+
         // Limit the number of birds attacking concurrently.
         int attackingCount = 0;
         for (int i = 0; i < MAX_BIRDS; i++)
         {
             if (birds[i].active && birds[i].attacking) attackingCount++;
         }
-        
+
         // Adjust max attacking count based on wave type
         int maxAttacking = aggressiveWave ? 4 : 2;  // More birds attack in aggressive waves
-        
-        if (attackingCount < maxAttacking)
+
+        // Check if any bird can start attacking
+         bool canAttack = false;
+         for(int i = 0; i < MAX_BIRDS; ++i) {
+             // Only allow attacking if bird is roughly in formation position
+             if (birds[i].active && !birds[i].attacking && fabsf(birds[i].position.z - (formationBaseZ + birds[i].formationOffset.z)) < 1.0f) {
+                 canAttack = true;
+                 break;
+             }
+         }
+
+        if (canAttack && attackingCount < maxAttacking)
         {
             for (int i = 0; i < MAX_BIRDS; i++)
             {
-                if (birds[i].active && !birds[i].attacking)
+                // Check again if this specific bird is ready to attack
+                 if (birds[i].active && !birds[i].attacking && fabsf(birds[i].position.z - (formationBaseZ + birds[i].formationOffset.z)) < 1.0f)
                 {
                     // With a small chance, start an attack (higher chance in aggressive waves)
-                    int attackChance = aggressiveWave ? 5 : 2;
-                    if (GetRandomValue(0, 1000) < attackChance)
+                    int attackChance = aggressiveWave ? 15 : 5; // Increased chance slightly
+                    if (GetRandomValue(0, 5000) < attackChance) // Check less frequently
                     {
                         birds[i].attacking = true;
 
-                        // Play wave spawn sound
-                        PlaySound(waveSpawnSound);
+                        // Play wave spawn sound (maybe rename or use a different sound for attack)
+                        if (IsSoundValid(waveSpawnSound)) PlaySound(waveSpawnSound);
 
-                        
-                        // Set an attack velocity: dive toward the player with a slight horizontal adjustment.
-                        float deltaX = playerPos.x - birds[i].position.x;
-                        birds[i].velocity.x = deltaX * (aggressiveWave ? 0.03f : 0.02f);  // Faster tracking in aggressive waves
-                        birds[i].velocity.z = aggressiveWave ? 0.6f : 0.5f;  // Faster diving in aggressive waves
+
+                        // Set an attack velocity: dive toward the player's current X with a slight random lead/lag
+                        float targetX = playerPos.x + GetRandomValue(-20, 20) / 10.0f; // Aim near player X
+                        float deltaX = targetX - birds[i].position.x;
+                        float dist = CalculateDistance(birds[i].position, (Vector3){targetX, 0.0f, playerPos.z}); // Approx distance
+
+                        float attackSpeedZ = aggressiveWave ? 0.4f : 0.3f; // Adjust Z speed
+                        float attackSpeedX = (dist > 0.1f) ? (deltaX / dist) * attackSpeedZ * 0.8f : 0.0f; // Adjust X speed based on Z speed
+
+                        birds[i].velocity.x = attackSpeedX;
+                        birds[i].velocity.z = attackSpeedZ; // Positive Z is towards player
                     }
                 }
             }
         }
-        
+
         // Update positions of attacking birds.
         for (int i = 0; i < MAX_BIRDS; i++)
         {
@@ -457,23 +576,25 @@ static void UpdateDrawFrame(void)
             {
                 birds[i].position.x += birds[i].velocity.x;
                 birds[i].position.z += birds[i].velocity.z;
-                
-                // Add some unpredictable movement to attacking birds
-                birds[i].position.x += sinf(GetTime() * 10 * birds[i].wobbleSpeed) * 0.05f;
-                
-                // Once an attacking bird reaches near the player (or passes a threshold),
-                // return it to formation.
-                if (birds[i].position.z > playerPos.z + 2)
+
+                // Add some minor sideways wobble during attack
+                birds[i].position.x += sinf(GetTime() * 8.0f + i) * 0.05f; // Unique wobble per bird
+
+                // Once an attacking bird passes the player or goes off bottom edge,
+                // mark it inactive (it flew past) instead of returning to formation immediately.
+                // It will be respawned with the next wave.
+                if (birds[i].position.z > playerPos.z + 5.0f) // Flew past player significantly
                 {
-                    birds[i].attacking = false;
-                    birds[i].velocity = (Vector3){0.0f, 0.0f, 0.0f};
-                    birds[i].position.x = formationX + birds[i].formationOffset.x;
-                    birds[i].position.z = formationBaseZ + birds[i].formationOffset.z;
+                     birds[i].active = false; // Bird is gone for this wave
+                     //birds[i].attacking = false; // Also reset state just in case
+                     //birds[i].velocity = (Vector3){0.0f, 0.0f, 0.0f};
+
+                     // No need to reposition, it's inactive now.
                 }
             }
         }
     }
-    
+
     // --- Bullet Updates ---
     if (!gameOver)
     {
@@ -482,47 +603,47 @@ static void UpdateDrawFrame(void)
             if (bullets[i].active)
             {
                 bullets[i].position.z -= bulletSpeed;
-                if (bullets[i].position.z < -playAreaHeight - 2.0f)
+                // Deactivate bullet if it goes off top edge
+                if (bullets[i].position.z < -playAreaHeight - 5.0f) // Extended boundary check
                     bullets[i].active = false;
             }
         }
     }
-    
+
     // --- Check for Collisions ---
     if (!gameOver)
     {
-        CheckCollisions();
-        CheckPlayerBirdCollisions();
+        CheckCollisions(); // Bullet-Bird
+        CheckPlayerBirdCollisions(); // Player-Bird
     }
-    
+
     // --- Drawing ---
     BeginDrawing();
-        ClearBackground(RAYWHITE);
-        
+        ClearBackground(BLACK); // Black background fits space theme better
+
         BeginMode3D(camera);
-            // Draw player spaceship with extra "wings"
-            Color playerColor = RED;
-            if (invincibilityFrames > 0 && (invincibilityFrames/10) % 2 == 0)
-                playerColor = LIGHTGRAY;
+            // Draw the player ship using the texture as a billboard
             if (!gameOver)
             {
-                DrawCube(playerPos, 2.0f, 0.3f, 1.5f, playerColor);
-                DrawCubeWires(playerPos, 2.0f, 0.3f, 1.5f, MAROON);
-                DrawCube((Vector3){playerPos.x - 1.2f, playerPos.y, playerPos.z + 0.2f}, 
-                         0.8f, 0.2f, 0.6f, DARKBLUE);
-                DrawCube((Vector3){playerPos.x + 1.2f, playerPos.y, playerPos.z + 0.2f}, 
-                         0.8f, 0.2f, 0.6f, DARKBLUE);
+                Color playerTint = WHITE; // Use WHITE tint to show original texture colors
+                if (invincibilityFrames > 0 && (invincibilityFrames/10) % 2 == 0) {
+                    playerTint = GRAY; // Flash effect using GRAY tint
+                }
+                // Adjust size parameter (3rd argument) to scale the sprite appropriately
+                DrawBillboard(camera, playerTexture, playerPos, 3.0f, playerTint);
             }
-            
+
             // Draw bullets
             for (int i = 0; i < MAX_BULLETS; i++)
             {
                 if (bullets[i].active)
                 {
-                    DrawSphere(bullets[i].position, bullets[i].radius, BLUE);
+                    // Draw bullets as bright spheres or small cubes
+                    DrawSphere(bullets[i].position, bullets[i].radius, YELLOW);
+                    // Or DrawCube(bullets[i].position, 0.4f, 0.4f, 1.0f, YELLOW); // Elongated bullet
                 }
             }
-            
+
             // Draw birds (only active ones)
             for (int i = 0; i < MAX_BIRDS; i++)
             {
@@ -530,498 +651,111 @@ static void UpdateDrawFrame(void)
                 {
                     Vector3 birdPos = birds[i].position;
                     float size = birds[i].size;
-                    DrawCube(birdPos, size, size * 0.3f, size, birds[i].color);
-                    
-                    // Draw simple "wings" that flap using a sine function.
-                    float wingOffset = sinf(GetTime() * 10) * 0.5f + 0.5f;
-                    DrawCube((Vector3){birdPos.x - size, birdPos.y, birdPos.z}, 
-                             size * 0.8f, size * 0.2f, size * 0.8f * wingOffset, birds[i].color);
-                    DrawCube((Vector3){birdPos.x + size, birdPos.y, birdPos.z}, 
-                             size * 0.8f, size * 0.2f, size * 0.8f * wingOffset, birds[i].color);
+                    Color birdColor = birds[i].color;
+
+                    // Make birds brighter
+                    // birdColor = ColorBrightness(birds[i].color, 0.2f); // Slightly brighter
+
+                    // Simple cube representation for birds is fine, or use another asset
+                    DrawCube(birdPos, size, size * 0.3f, size, birdColor);
+
+                    // Optional simple wings (adjust as needed)
+                    float wingOffset = sinf(GetTime() * 15.0f + i * 0.5f) * 0.4f + 0.6f; // Faster flap, slightly varied per bird
+                    DrawCube((Vector3){birdPos.x - size*0.6f, birdPos.y, birdPos.z + size * 0.2f},
+                             size * 0.7f, size * 0.2f, size * 0.5f * wingOffset, birdColor);
+                    DrawCube((Vector3){birdPos.x + size*0.6f, birdPos.y, birdPos.z + size * 0.2f},
+                             size * 0.7f, size * 0.2f, size * 0.5f * wingOffset, birdColor);
+
+                    // Draw wireframe outline for definition
+                    DrawCubeWires(birdPos, size, size * 0.3f, size, ColorBrightness(birdColor, -0.5f)); // Darker outline
                 }
             }
-            
-            // Draw play area boundaries
-            DrawLine3D((Vector3){-playAreaWidth/2, 0, -playAreaHeight}, (Vector3){playAreaWidth/2, 0, -playAreaHeight}, RED);
-            DrawLine3D((Vector3){-playAreaWidth/2, 0, playerPos.z + 1}, (Vector3){playAreaWidth/2, 0, playerPos.z + 1}, RED);
-            DrawLine3D((Vector3){-playAreaWidth/2, 0, -playAreaHeight}, (Vector3){-playAreaWidth/2, 0, playerPos.z + 1}, RED);
-            DrawLine3D((Vector3){playAreaWidth/2, 0, -playAreaHeight}, (Vector3){playAreaWidth/2, 0, playerPos.z + 1}, RED);
-            
+
+            // Draw play area boundaries (optional, can be distracting)
+            // DrawLine3D((Vector3){-playAreaWidth/2, 0, -playAreaHeight}, (Vector3){playAreaWidth/2, 0, -playAreaHeight}, DARKGRAY);
+            // DrawLine3D((Vector3){-playAreaWidth/2, 0, playerPos.z + 1}, (Vector3){playAreaWidth/2, 0, playerPos.z + 1}, DARKGRAY);
+            // DrawLine3D((Vector3){-playAreaWidth/2, 0, -playAreaHeight}, (Vector3){-playAreaWidth/2, 0, playerPos.z + 1}, DARKGRAY);
+            // DrawLine3D((Vector3){playAreaWidth/2, 0, -playAreaHeight}, (Vector3){playAreaWidth/2, 0, playerPos.z + 1}, DARKGRAY);
+
+             // Draw a subtle grid on the "floor"
+             //DrawGrid(40, 2.0f);
+
+
         EndMode3D();
-        
-        // Overlay text info
-        DrawText("Use arrow keys or touch to move, spacebar/tap to shoot", 10, 10, 20, DARKGRAY);
-        DrawText(TextFormat("SCORE: %i", score), GetScreenWidth() - 150, 10, 20, BLACK);
-        DrawText(TextFormat("LIVES: %i", lives), GetScreenWidth() - 150, 40, 20, BLACK);
-        
-        // Draw wave information
-        bool isAggressive = wavePattern[(currentWave - 1) % WAVE_PATTERN_LENGTH];
-        DrawText(TextFormat("WAVE: %i (%s)", currentWave, isAggressive ? "AGGRESSIVE" : "NORMAL"), 10, 70, 20, isAggressive ? RED : DARKGREEN);
-        
-        // If waiting to respawn, show countdown
+
+        // --- UI Overlay ---
+        // Draw Score, Lives, Wave Info
+        DrawText(TextFormat("SCORE: %04i", score), 10, 10, 20, RAYWHITE); // Use fixed width for score
+        DrawText(TextFormat("LIVES: %i", lives), GetScreenWidth() - 100, 10, 20, RAYWHITE);
+
+        bool isAggressive = (currentWave > 0) && wavePattern[(currentWave - 1) % WAVE_PATTERN_LENGTH];
+        DrawText(TextFormat("WAVE: %i %s", currentWave, isAggressive ? "[AGGRESSIVE]" : ""), 10, 35, 20, isAggressive ? RED : LIGHTGRAY);
+
+
+        // Draw instructions only at the start or if game over? Maybe smaller at bottom
+        if (score == 0 && lives == MAX_LIVES && currentWave <= 1) {
+             DrawText("Arrows/AD/Touch: Move | Space/Tap: Shoot", 10, GetScreenHeight() - 30, 20, GRAY);
+        }
+
+        // If waiting to respawn, show message
         if (allBirdsDestroyed && !gameOver)
         {
             int countdownSeconds = (RESPAWN_DELAY_FRAMES - respawnDelay) / 60 + 1;
-            DrawText(TextFormat("NEXT WAVE IN: %i", countdownSeconds), GetScreenWidth()/2 - 100, 40, 20, MAROON);
+             DrawText(TextFormat("WAVE CLEARED! NEXT WAVE IN: %i", countdownSeconds),
+                      GetScreenWidth()/2 - MeasureText(TextFormat("WAVE CLEARED! NEXT WAVE IN: %i", countdownSeconds), 20)/2,
+                      GetScreenHeight()/2 - 10, 20, GREEN); // Centered message
         }
-        
+
         if (gameOver)
         {
-            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.7f));
-            DrawText("GAME OVER", GetScreenWidth()/2 - MeasureText("GAME OVER", 40)/2,
-                     GetScreenHeight()/2 - 40, 40, RED);
+            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.8f)); // Darker overlay
+            DrawText("GAME OVER", GetScreenWidth()/2 - MeasureText("GAME OVER", 50)/2, // Larger text
+                     GetScreenHeight()/2 - 60, 50, RED);
             DrawText(TextFormat("FINAL SCORE: %i", score),
-                     GetScreenWidth()/2 - MeasureText(TextFormat("FINAL SCORE: %i", score), 20)/2,
-                     GetScreenHeight()/2 + 10, 20, WHITE);
-            DrawText("PRESS R TO RESTART", GetScreenWidth()/2 - MeasureText("PRESS R TO RESTART", 20)/2,
-                     GetScreenHeight()/2 + 40, 20, WHITE);
+                     GetScreenWidth()/2 - MeasureText(TextFormat("FINAL SCORE: %i", score), 30)/2,
+                     GetScreenHeight()/2 + 0, 30, RAYWHITE);
+            DrawText("PRESS R or TAP TO RESTART", GetScreenWidth()/2 - MeasureText("PRESS R or TAP TO RESTART", 20)/2,
+                     GetScreenHeight()/2 + 40, 20, LIGHTGRAY);
         }
-        
-        DrawFPS(10, 40);
+
+        DrawFPS(GetScreenWidth() - 90, GetScreenHeight() - 30); // FPS counter bottom right
     EndDrawing();
 }
-#if 0
-/*******************************************************************************************
-*
-*   phoenix_shooter
-*
-*   A modified raylib example demonstrating a phoenix-like shooter.
-*   Use LEFT/RIGHT arrow keys (or press on left/right half of the screen) to move,
-*   and SPACEBAR (or a quick tap) to fire.
-*
-********************************************************************************************/
+/*
 
-#include "raylib.h"
+Key Changes:
 
-#if defined(PLATFORM_WEB)
-    #include <emscripten/emscripten.h>
-#endif
+playerTexture: Global Texture2D declared.
 
-#define MAX_BULLETS 32
-#define MAX_BIRDS 10
-#define MAX_LIVES 3
+main():
 
-bool IsGestureTap(void) {
-    //return false;
-    return IsGestureDetected(GESTURE_TAP);
-} 
-// Structure to represent a bullet
-typedef struct Bullet {
-    Vector3 position;
-    bool active;
-    float radius;
-} Bullet;
+playerTexture = LoadTexture("spaceship.png"); added after InitWindow(). Includes basic error checking/fallback.
 
-// Structure to represent a bird
-typedef struct Bird {
-    Vector3 position;
-    Vector3 velocity;
-    bool active;
-    Color color;
-    float size;
-} Bird;
+UnloadTexture(playerTexture); added before CloseWindow().
 
-Bullet bullets[MAX_BULLETS] = {0};
-Bird birds[MAX_BIRDS] = {0};
+Camera changed to CAMERA_PERSPECTIVE and position/fovy adjusted for a potentially better view with billboards. You might want to switch back to CAMERA_ORTHOGRAPHIC if you prefer that look.
 
-Camera camera = { 0 };
-Vector3 playerPos = { 0.0f, 0.0f, 8.0f };  // Player position moved up
-float playerSpeed = 0.4f;
-float bulletSpeed = 0.8f;
-float playAreaWidth = 30.0f;
-float playAreaHeight = 20.0f;
-int score = 0;
-int lives = MAX_LIVES;
-bool gameOver = false;
-int invincibilityFrames = 0;  // Invincibility after being hit
+UpdateDrawFrame() -> Drawing:
 
-static void UpdateDrawFrame(void);
-static void InitBirds(void);
-static void CheckCollisions(void);
-static void CheckPlayerBirdCollisions(void);
-static void ResetGame(void);
+The block of DrawCube calls for the player is removed.
 
-// Custom distance function to replace Vector3Distance
-float CalculateDistance(Vector3 v1, Vector3 v2)
-{
-    float dx = v2.x - v1.x;
-    float dy = v2.y - v1.y;
-    float dz = v2.z - v1.z;
-    
-    return sqrtf(dx*dx + dy*dy + dz*dz);
-}
+DrawBillboard(camera, playerTexture, playerPos, 3.0f, playerTint); is added inside the if (!gameOver) block.
 
-// Spawn a bullet from the player's current position
-static void SpawnBullet(void)
-{
-    for (int i = 0; i < MAX_BULLETS; i++)
-    {
-        if (!bullets[i].active)
-        {
-            bullets[i].active = true;
-            bullets[i].radius = 0.5f;
-            // Spawn bullet ahead of the player
-            bullets[i].position = (Vector3){ playerPos.x, 0.0f, playerPos.z - 1.0f };
-            break;
-        }
-    }
-}
+camera and playerPos are used as before.
 
-// Initialize birds with random positions and colors
-static void InitBirds(void)
-{
-    for (int i = 0; i < MAX_BIRDS; i++)
-    {
-        birds[i].position = (Vector3){ 
-            GetRandomValue(-playAreaWidth/2 + 2, playAreaWidth/2 - 2), 
-            0.0f, 
-            GetRandomValue(-playAreaHeight + 2, 0) 
-        };
-        birds[i].velocity = (Vector3){ 
-            GetRandomValue(-10, 10) / 100.0f, 
-            0.0f, 
-            GetRandomValue(-5, 5) / 100.0f 
-        };
-        birds[i].active = true;
-        birds[i].size = GetRandomValue(10, 15) / 10.0f;
-        
-        // Random bird colors
-        switch (GetRandomValue(0, 4))
-        {
-            case 0: birds[i].color = RED; break;
-            case 1: birds[i].color = GREEN; break;
-            case 2: birds[i].color = BLUE; break;
-            case 3: birds[i].color = PURPLE; break;
-            case 4: birds[i].color = ORANGE; break;
-        }
-    }
-}
+playerTexture is the loaded asset.
 
-// Check for collisions between bullets and birds
-static void CheckCollisions(void)
-{
-    for (int i = 0; i < MAX_BULLETS; i++)
-    {
-        if (bullets[i].active)
-        {
-            for (int j = 0; j < MAX_BIRDS; j++)
-            {
-                if (birds[j].active)
-                {
-                    // Use our custom distance function instead of Vector3Distance
-                    if (CalculateDistance(bullets[i].position, birds[j].position) < (bullets[i].radius + birds[j].size * 0.7f))
-                    {
-                        bullets[i].active = false;
-                        birds[j].active = false;
-                        score++;
-                        
-                        // Respawn bird after a short delay (from the top)
-                        birds[j].position = (Vector3){ 
-                            GetRandomValue(-playAreaWidth/2 + 2, playAreaWidth/2 - 2), 
-                            0.0f, 
-                            GetRandomValue(-playAreaHeight + 2, -playAreaHeight/2) 
-                        };
-                        birds[j].velocity = (Vector3){ 
-                            GetRandomValue(-15, 15) / 100.0f, 
-                            0.0f, 
-                            GetRandomValue(5, 15) / 100.0f
-                        };
-                        birds[j].active = true;
-                        birds[j].size = GetRandomValue(10, 15) / 10.0f;
-                    }
-                }
-            }
-        }
-    }
-}
+3.0f is the size in world units. You will likely need to adjust this value to make the ship look appropriately sized. Try values between 2.0 and 5.0.
 
-// Check for collisions between player and birds
-static void CheckPlayerBirdCollisions(void)
-{
-    // Skip collision check during invincibility frames
-    if (invincibilityFrames > 0) return;
-    
-    for (int i = 0; i < MAX_BIRDS; i++)
-    {
-        if (birds[i].active)
-        {
-            // Check if bird is near the player
-            float playerSize = 1.0f;  // Approximate player collision size
-            if (CalculateDistance(playerPos, birds[i].position) < (playerSize + birds[i].size))
-            {
-                lives--;
-                invincibilityFrames = 120;  // 2 seconds at 60 FPS
-                
-                // Check if game over
-                if (lives <= 0)
-                {
-                    gameOver = true;
-                }
-                
-                // Reset bird position
-                birds[i].position = (Vector3){ 
-                    GetRandomValue(-playAreaWidth/2 + 2, playAreaWidth/2 - 2), 
-                    0.0f, 
-                    GetRandomValue(-playAreaHeight + 2, -playAreaHeight/2) 
-                };
-                
-                // Only handle one collision at a time to prevent multiple lives lost in one frame
-                break;
-            }
-        }
-    }
-}
+playerTint is calculated based on invincibility, using WHITE as the base (to show original texture colors) and GRAY for flashing.
 
-// Reset the game state
-static void ResetGame(void)
-{
-    score = 0;
-    lives = MAX_LIVES;
-    gameOver = false;
-    
-    // Reset player position
-    playerPos = (Vector3){ 0.0f, 0.0f, 8.0f };
-    
-    // Deactivate all bullets
-    for (int i = 0; i < MAX_BULLETS; i++)
-    {
-        bullets[i].active = false;
-    }
-    
-    // Reset birds
-    InitBirds();
-}
+UpdateDrawFrame() -> Player Input: Player boundary checks slightly adjusted based on an estimated visual width (playerHalfWidth).
 
-int main(void)
-{
-    // Initialization
-    const int screenWidth = 800;
-    const int screenHeight = 600;
+CheckPlayerBirdCollisions(): The playerCollisionRadius might need tuning (1.5f is a starting guess) to match the visual size of the new sprite for fair collisions.
 
-    InitWindow(screenWidth, screenHeight, "raylib - phoenix bird shooter");
+SpawnBullet(): Adjusted the Z-offset where the bullet spawns to appear closer to the front/center of the sprite.
 
-    // Adjusted camera settings to make sure the player is visible
-    camera.position = (Vector3){ 0.0f, 25.0f, 0.0f };
-    camera.target   = (Vector3){ 0.0f, 0.0f, 0.0f };
-    camera.up       = (Vector3){ 0.0f, 0.0f, -1.0f };
-    camera.fovy     = 30.0f;
-    camera.projection = CAMERA_ORTHOGRAPHIC;
+Other Minor Changes: Black background, adjusted UI text positions/colors, perspective camera option, refined bird attack/respawn logic, sound loading checks.
 
-    // Initialize birds
-    InitBirds();
-
-#if defined(PLATFORM_WEB)
-    emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
-#else
-    SetTargetFPS(60);
-#endif
-
-    // Main game loop
-    while (!WindowShouldClose())
-    {
-        UpdateDrawFrame();
-    }
-
-    // De-Initialization
-    CloseWindow();
-
-    return 0;
-}
-
-static void UpdateDrawFrame(void)
-{
-    // --- Input Handling ---
-    if (!gameOver)
-    {
-        // Keyboard movement: left/right arrow keys
-        if (IsKeyDown(KEY_LEFT))  playerPos.x -= playerSpeed;
-        if (IsKeyDown(KEY_RIGHT)) playerPos.x += playerSpeed;
-
-        // Constrain player to play area
-        if (playerPos.x < -playAreaWidth/2) playerPos.x = -playAreaWidth/2;
-        if (playerPos.x > playAreaWidth/2) playerPos.x = playAreaWidth/2;
-
-        // Touch/Mouse input:
-        // If the screen is pressed, check which half is being pressed for movement.
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-        {
-            Vector2 pos = GetMousePosition();
-            if (pos.x < GetScreenWidth()/2) playerPos.x -= playerSpeed;  // Left half of screen
-            else                           playerPos.x += playerSpeed;  // Right half of screen
-        }
-
-        // Shooting: spacebar press OR a tap gesture (which represents a short press)
-        static int frameCounter = 0;
-        frameCounter++;
-        
-        if (IsKeyPressed(KEY_SPACE) || IsGestureTap())
-        {
-            SpawnBullet();
-        }
-        
-        // Auto-fire every 10 frames
-        //if (frameCounter % 10 == 0)
-        //{
-        //    SpawnBullet();
-        //}
-
-        // Decrease invincibility frames if active
-        if (invincibilityFrames > 0)
-        {
-            invincibilityFrames--;
-        }
-    }
-    else
-    {
-        // Game Over - wait for restart key
-        if (IsKeyPressed(KEY_R))
-        {
-            ResetGame();
-        }
-    }
-
-    // --- Bird Updates ---
-    if (!gameOver)
-    {
-        for (int i = 0; i < MAX_BIRDS; i++)
-        {
-            if (birds[i].active)
-            {
-                // Move birds according to their velocity
-                birds[i].position.x += birds[i].velocity.x;
-                birds[i].position.z += birds[i].velocity.z;
-                
-                // Bounce birds off the edges of the play area
-                if (birds[i].position.x < -playAreaWidth/2 || birds[i].position.x > playAreaWidth/2)
-                {
-                    birds[i].velocity.x = -birds[i].velocity.x;
-                }
-                
-                // If birds reach the bottom, send them back to the top
-                if (birds[i].position.z > playerPos.z - 2)
-                {
-                    birds[i].position.z = -playAreaHeight;
-                    birds[i].position.x = GetRandomValue(-playAreaWidth/2 + 2, playAreaWidth/2 - 2);
-                }
-                
-                // If birds go too high, bounce them back
-                if (birds[i].position.z < -playAreaHeight)
-                {
-                    birds[i].velocity.z = -birds[i].velocity.z;
-                }
-            }
-        }
-    }
-
-    // --- Bullet Updates ---
-    if (!gameOver)
-    {
-        for (int i = 0; i < MAX_BULLETS; i++)
-        {
-            if (bullets[i].active)
-            {
-                // Move bullet forward (toward decreasing Z)
-                bullets[i].position.z -= bulletSpeed;
-                // Deactivate bullet if it goes too far (off-screen)
-                if (bullets[i].position.z < -playAreaHeight - 2.0f)
-                {
-                    bullets[i].active = false;
-                }
-            }
-        }
-    }
-
-    // --- Check for Collisions ---
-    if (!gameOver)
-    {
-        CheckCollisions();
-        CheckPlayerBirdCollisions();
-    }
-
-    // --- Drawing ---
-    BeginDrawing();
-        ClearBackground(RAYWHITE);
-
-        BeginMode3D(camera);
-            // Draw the player spaceship as a more visible shape
-            Color playerColor = RED;
-            
-            // Flash the player when invincible
-            if (invincibilityFrames > 0 && (invincibilityFrames/10) % 2 == 0)
-            {
-                playerColor = LIGHTGRAY;
-            }
-            
-            if (!gameOver)
-            {
-                DrawCube(playerPos, 2.0f, 0.3f, 1.5f, playerColor);
-                DrawCubeWires(playerPos, 2.0f, 0.3f, 1.5f, MAROON);
-                // Add player "wings" for better visibility
-                DrawCube((Vector3){playerPos.x - 1.2f, playerPos.y, playerPos.z + 0.2f}, 
-                         0.8f, 0.2f, 0.6f, DARKBLUE);
-                DrawCube((Vector3){playerPos.x + 1.2f, playerPos.y, playerPos.z + 0.2f}, 
-                         0.8f, 0.2f, 0.6f, DARKBLUE);
-            }
-
-            // Draw active bullets as larger blue spheres
-            for (int i = 0; i < MAX_BULLETS; i++)
-            {
-                if (bullets[i].active)
-                {
-                    DrawSphere(bullets[i].position, bullets[i].radius, BLUE);
-                }
-            }
-            
-            // Draw birds
-            for (int i = 0; i < MAX_BIRDS; i++)
-            {
-                if (birds[i].active)
-                {
-                    // Draw bird as a colored cube with wings (additional cubes)
-                    Vector3 birdPos = birds[i].position;
-                    float size = birds[i].size;
-                    
-                    DrawCube(birdPos, size, size * 0.3f, size, birds[i].color);
-                    
-                    // Wings - flap based on time
-                    float wingOffset = sinf(GetTime() * 10) * 0.5f + 0.5f;
-                    
-                    DrawCube((Vector3){birdPos.x - size, birdPos.y, birdPos.z}, 
-                             size * 0.8f, size * 0.2f, size * 0.8f * wingOffset, birds[i].color);
-                    DrawCube((Vector3){birdPos.x + size, birdPos.y, birdPos.z}, 
-                             size * 0.8f, size * 0.2f, size * 0.8f * wingOffset, birds[i].color);
-                }
-            }
-
-            // Draw a grid representing the play area boundaries
-            //DrawGrid(30, 1.0f);
-            
-            // Draw play area boundaries
-            DrawLine3D((Vector3){-playAreaWidth/2, 0, -playAreaHeight}, (Vector3){playAreaWidth/2, 0, -playAreaHeight}, RED);
-            DrawLine3D((Vector3){-playAreaWidth/2, 0, playerPos.z + 1}, (Vector3){playAreaWidth/2, 0, playerPos.z + 1}, RED);
-            DrawLine3D((Vector3){-playAreaWidth/2, 0, -playAreaHeight}, (Vector3){-playAreaWidth/2, 0, playerPos.z + 1}, RED);
-            DrawLine3D((Vector3){playAreaWidth/2, 0, -playAreaHeight}, (Vector3){playAreaWidth/2, 0, playerPos.z + 1}, RED);
-            
-        EndMode3D();
-
-        // Draw instructions and score
-        DrawText("Use arrow keys or touch screen to move, spacebar/tap to shoot", 10, 10, 20, DARKGRAY);
-        DrawText(TextFormat("SCORE: %i", score), GetScreenWidth() - 150, 10, 20, BLACK);
-        
-        // Draw lives
-        DrawText(TextFormat("LIVES: %i", lives), GetScreenWidth() - 150, 40, 20, BLACK);
-        
-        // Draw game over screen
-        if (gameOver)
-        {
-            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.7f));
-            DrawText("GAME OVER", GetScreenWidth()/2 - MeasureText("GAME OVER", 40)/2, GetScreenHeight()/2 - 40, 40, RED);
-            DrawText(TextFormat("FINAL SCORE: %i", score), GetScreenWidth()/2 - MeasureText(TextFormat("FINAL SCORE: %i", score), 20)/2, GetScreenHeight()/2 + 10, 20, WHITE);
-            DrawText("PRESS R TO RESTART", GetScreenWidth()/2 - MeasureText("PRESS R TO RESTART", 20)/2, GetScreenHeight()/2 + 40, 20, WHITE);
-        }
-        
-        DrawFPS(10, 40);
-    EndDrawing();
-}
-
-#endif
+Now, when you compile and run this code (making sure spaceship.png is accessible), the player ship should be rendered using the provided image, always facing the camera. Remember to adjust the size parameter in DrawBillboard and potentially the playerCollisionRadius for the best visual and gameplay results.
+*/
